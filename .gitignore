@@ -1,0 +1,17 @@
+# Django specific overrides
+*.sqlite3
+db.sqlite3
+staticfiles/
+media/
+__pycache__/
+*.pyc
+
+# Local environment variables
+.env
+v env/
+.venv/
+env/
+
+# OS specific files
+.DS_Store
+Thumbs.db

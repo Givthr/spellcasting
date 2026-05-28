@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voice Spelling Bee</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .letter-tile {
+            animation: pop-in 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+            display: inline-block;
+            background: #4f46e5;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 12px;
+            font-size: 3rem;
+            font-weight: 900;
+            margin: 5px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            text-transform: uppercase;
+        }
+
+        @keyframes pop-in {
+            0% { transform: scale(0); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .hidden { display: none; }
+    </style>
+</head>
+<body class="bg-slate-900 min-h-screen flex flex-col items-center justify-center p-4">
+
+    {{ word_list|json_script:"words-data" }}
+
+    <div class="bg-slate-800 p-10 rounded-3xl shadow-2xl max-w-2xl w-full text-center border border-slate-700">
+        <h1 class="text-indigo-400 uppercase tracking-widest font-black text-sm mb-2">AI Spelling Bee</h1>
+        <div id="status-text" class="text-2xl font-bold mb-8 text-white">Press Start to Play</div>
+
+        <div id="visualizer" class="flex flex-wrap justify-center min-h-[140px] mb-8 content-center"></div>
+
+        <div class="flex flex-col items-center gap-4">
+            <button id="main-btn" onclick="initGame()" class="bg-indigo-600 hover:bg-indigo-500 text-white px-12 py-4 rounded-2xl font-bold text-xl transition-all shadow-lg active:scale-95">
+                Start Game
+            </button>
+            
+            <div id="control-panel" class="hidden flex gap-4">
+                <button onclick="clearSpeechOnly()" class="bg-slate-600 hover:bg-slate-500 text-white px-8 py-3 rounded-xl font-bold transition-all shadow-lg active:scale-95 border border-slate-500">
+                    Clear Letters
+                </button>
+                <button onclick="manualSubmit()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-8 py-3 rounded-xl font-bold transition-all shadow-lg active:scale-95">
+                    Done
+                </button>
+            </div>
+
+            <p id="feedback" class="text-slate-400 font-medium h-6"></p>
+        </div>
+    </div>
+
+    <script>
+    // 1. Initial Data Setup
+    let originalWordPool = ["apple", "banana", "galaxy", "keyboard", "robot"];
+    try {
+        const data = JSON.parse(document.getElementById('words-data').textContent);
+        if(data && data.length > 0) originalWordPool = data;
+    } catch(e) {}
+
+    // 2. Track remaining words
+    let availableWords = [...originalWordPool]; 
+    let currentWord = "";
+    let shouldEvaluate = false;
+    let gameActive = false;
+
+    const visualizer = document.getElementById('visualizer');
+    const statusText = document.getElementById('status-text');
+    const mainBtn = document.getElementById('main-btn');
+    const controlPanel = document.getElementById('control-panel');
+    const feedback = document.getElementById('feedback');
+
+    const synth = window.speechSynthesis;
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const recognition = new SpeechRecognition();
+
+    recognition.interimResults = true; 
+    recognition.continuous = true;
+    recognition.lang = 'en-US';
+
+    function speak(text, callback) {
+        const utter = new SpeechSynthesisUtterance(text);
+        utter.rate = 0.9; 
+        utter.onend = callback;
+        synth.speak(utter);
+    }
+
+    function initGame() {
+        mainBtn.classList.add('hidden');
+        nextRound();
+    }
+
+    function nextRound() {
+        // Check if we ran out of words
+        if (availableWords.length === 0) {
+            statusText.innerText = "Game Over! Restarting list...";
+            availableWords = [...originalWordPool]; // Reset the pool
+        }
+
+        gameActive = true;
+        shouldEvaluate = false;
+        visualizer.innerHTML = "";
+        feedback.innerText = "";
+        controlPanel.classList.add('hidden');
+
+        // Pick a random index from the AVAILABLE words only
+        const randomIndex = Math.floor(Math.random() * availableWords.length);
+        currentWord = availableWords[randomIndex];
+
+        // Remove the chosen word from the pool so it doesn't repeat
+        availableWords.splice(randomIndex, 1);
+        
+        statusText.innerText = "Listen closely...";
+        speak(`Your word is ${currentWord}. Spell it.`, () => {
+            statusText.innerText = "Listening...";
+            controlPanel.classList.remove('hidden');
+            recognition.start();
+        });
+    }
+
+    function clearSpeechOnly() {
+        shouldEvaluate = false; 
+        recognition.stop(); 
+        visualizer.innerHTML = "";
+        statusText.innerText = "Cleared! Try again.";
+    }
+
+    function manualSubmit() {
+        shouldEvaluate = true;
+        recognition.stop();
+    }
+
+    recognition.onresult = (event) => {
+        let transcript = "";
+        for (let i = event.resultIndex; i < event.results.length; ++i) {
+            transcript += event.results[i][0].transcript;
+        }
+
+        let words = transcript.trim().split(/\s+/);
+        let spelled = words
+            .map(word => word.charAt(0)) 
+            .join('')
+            .toLowerCase()
+            .replace(/[^a-z]/g, ''); 
+        
+        visualizer.innerHTML = "";
+        spelled.split('').forEach(char => {
+            const tile = document.createElement('span');
+            tile.className = "letter-tile";
+            tile.innerText = char;
+            visualizer.appendChild(tile);
+        });
+
+        if (spelled === currentWord) {
+            shouldEvaluate = true;
+            recognition.stop();
+        }
+    };
+
+    recognition.onend = () => {
+        if (!gameActive) return;
+
+        if (!shouldEvaluate) {
+            recognition.start(); // Auto-restart mic if user paused
+            return;
+        }
+
+        const finalResult = visualizer.innerText.replace(/[\s\n]/g, '').toLowerCase();
+        if (finalResult === "") {
+            recognition.start();
+            return;
+        }
+
+        gameActive = false;
+        controlPanel.classList.add('hidden');
+
+        if (finalResult === currentWord) {
+            statusText.innerText = "Correct! 🎉";
+            speak("Excellent!", () => setTimeout(nextRound, 1500));
+        } else {
+            statusText.innerText = "Not quite.";
+            feedback.innerText = `You spelled: ${finalResult.toUpperCase()}`;
+            speak(`The correct spelling is ${currentWord.split('').join(' ')}`, () => {
+                setTimeout(nextRound, 2000);
+            });
+        }
+    };
+</script>
+</body>
+</html>

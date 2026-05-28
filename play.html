@@ -1,0 +1,592 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spellcasting</title>
+    <style>
+        body {
+            background-color: #282c34;
+            color: white;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden;
+        }
+
+        /* ==================== VIDEO INTRO SPLASH OVERLAY ==================== */
+        #introOverlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: black;
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: opacity 1s ease-out, visibility 1s;
+        }
+        #introVideo {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .skip-intro-btn {
+            position: absolute;
+            bottom: 30px;
+            right: 30px;
+            background-color: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            padding: 8px 16px;
+            font-size: 0.9rem;
+            color: white;
+            border-radius: 4px;
+            cursor: pointer;
+            z-index: 10000;
+        }
+        .skip-intro-btn:hover { background-color: rgba(255, 255, 255, 0.4); }
+
+        /* ==================== CORE GAME UI COMPONENTS ==================== */
+        .container {
+            text-align: center;
+            background-color: #1e222b;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            max-width: 600px;
+            width: 90%;
+        }
+
+        .battle-arena {
+            margin: 20px auto;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        .enemy-sprite {
+            font-size: 5rem; /* Large emoji monster placeholder */
+            min-height: 100px;
+            margin-bottom: 10px;
+            transition: transform 0.2s ease, opacity 0.5s ease;
+        }
+        .health-bar-container {
+            width: 250px;
+            height: 16px;
+            background-color: #3a3f4d;
+            border-radius: 8px;
+            border: 2px solid #555;
+            overflow: hidden;
+            margin-bottom: 15px;
+        }
+        .health-bar {
+            width: 100%;
+            height: 100%;
+            background-color: #e53935; /* Red monster health */
+            transition: width 0.3s ease-in-out;
+        }
+        .enemy-name {
+            color: #ef5350;
+            font-weight: bold;
+            font-size: 1.1rem;
+            letter-spacing: 1px;
+            margin-bottom: 5px;
+        }
+
+        h1 { color: #b68f40; font-size: 2.5rem; margin-bottom: 10px; }
+        .menu-subtitle { color: #aaa; font-size: 1.2rem; margin-bottom: 30px; }
+        
+        .difficulty-section { margin: 25px 0; }
+        .difficulty-label { font-size: 1.1rem; color: #eee; margin-bottom: 10px; font-weight: bold; }
+        
+        .diff-btn {
+            background-color: #3a3f4d;
+            color: #ccc;
+            padding: 10px 20px;
+            font-size: 1rem;
+            border: 2px solid transparent;
+            border-radius: 6px;
+            cursor: pointer;
+            margin: 5px;
+            transition: all 0.2s;
+        }
+        .diff-btn:hover { background-color: #4e5465; color: white; }
+        .diff-btn.selected[data-diff="easy"] { background-color: #4caf50; color: white; border-color: #81c784; }
+        .diff-btn.selected[data-diff="medium"] { background-color: #ff9800; color: white; border-color: #ffb74d; }
+        .diff-btn.selected[data-diff="hard"] { background-color: #e53935; color: white; border-color: #ef5350; }
+
+        .stats-row {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            margin: 20px 0;
+            width: 100%;
+        }
+        .score-box { color: #4caf50; font-size: 1.5rem; font-weight: bold; }
+        .timer-box { color: #e53935; font-size: 1.6rem; font-weight: bold; background: #2c1e21; padding: 5px 15px; border-radius: 6px; border: 1px solid #7a2022; }
+        .hearts-box { font-size: 1.8rem; color: #f44336; letter-spacing: 5px; }
+        .status-box { color: #ffeb3b; font-size: 1.2rem; min-height: 30px; margin-bottom: 20px; }
+        
+        .spelling-display {
+            font-size: 3rem;
+            letter-spacing: 8px;
+            color: #00bcd4;
+            margin: 30px 0;
+            min-height: 70px;
+            text-transform: uppercase;
+            font-weight: bold;
+        }
+        button.action-btn {
+            background-color: #4caf50;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 1.2rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.1s;
+            margin: 10px;
+            font-weight: bold;
+        }
+        button.action-btn:hover { background-color: #45a049; transform: scale(1.02); }
+        button.action-btn:active { transform: scale(0.98); }
+        button.speak-btn { background-color: #008cba; }
+        button.speak-btn:hover { background-color: #007b9a; }
+        button.listening { background-color: #f44336; animation: pulse 1.5s infinite; }
+        button:disabled { background-color: #555 !important; cursor: not-allowed; transform: none !important; }
+        
+        .hidden { display: none !important; }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        /* ==================== BATTLE ANIMATIONS ==================== */
+
+        @keyframes monsterDamage {
+            0% { transform: scale(1) translateX(0); filter: brightness(1) drop-shadow(0 0 0 rgba(255,0,0,0)); }
+            15% { transform: scale(1.3) translateX(-10px); filter: brightness(5) drop-shadow(0 0 15px #ff3333); }
+            30% { transform: scale(1.1) translateX(10px); filter: brightness(5) drop-shadow(0 0 15px #fff); }
+            45% { transform: scale(1.2) translateX(-8px); filter: brightness(3); }
+            60% { transform: scale(1) translateX(8px); filter: brightness(2); }
+            80% { transform: scale(1.1) translateX(-4px); filter: brightness(1.5); }
+            100% { transform: scale(1) translateX(0); filter: brightness(1) drop-shadow(0 0 0 rgba(0,0,0,0)); }
+        }
+
+        @keyframes monsterAttack {
+            0% { transform: translateY(0) scale(1); filter: sepia(0); }
+            20% { transform: translateY(15px) scale(0.9); filter: sepia(1) hue-rotate(-50deg) saturate(5); } 
+            40% { transform: translateY(-35px) scale(1.2); } 
+            60% { transform: translateY(0) scale(1); }
+            80% { transform: translateY(-5px); }
+            100% { transform: translateY(0); }
+        }
+
+        .monster-hit {
+            animation: monsterDamage 0.5s ease-in-out forwards;
+        }
+
+        .monster-strike {
+            animation: monsterAttack 0.4s ease-in-out forwards;
+        }
+    </style>
+</head>
+<body>
+
+<div id="introOverlay">
+    <video id="introVideo" autoplay muted playsinline>
+        <source src="{% static 'bee/intro.mp4' %}" type="video/mp4">
+        Your browser does not support the video tag.
+    </video>
+    <button class="skip-intro-btn" onclick="endIntroSequence()">SKIP INTRO </button>
+</div>
+
+<div class="container">
+    <div id="menuScreen">
+        <h1>SPELLCASTING</h1>
+        <p class="menu-subtitle">A Voice-Controlled Spelling Adventure</p>
+        
+        <div class="difficulty-section">
+            <div class="difficulty-label">CHOOSE DIFFICULTY:</div>
+            <button class="diff-btn selected" data-diff="easy" onclick="selectDifficulty('easy')">EASY</button>
+            <button class="diff-btn" data-diff="medium" onclick="selectDifficulty('medium')">MEDIUM</button>
+            <button class="diff-btn" data-diff="hard" onclick="selectDifficulty('hard')">HARD</button>
+        </div>
+
+        <div style="margin: 20px 0;">
+            <p style="color: #aaa; font-size: 1rem; line-height: 1.6;">
+                <strong>Rules:</strong> Listen to the AI speak a word, then spell it out loud letter-by-letter. You have 3 hearts, 15 seconds per word, and you can repeat the audio clue at any time!
+            </p>
+        </div>
+
+        <button class="action-btn" style="background-color: #b68f40; font-size: 1.5rem; padding: 15px 30px;" onclick="startGame()">
+            START GAME
+        </button>
+        <button class="action-btn" style="background-color: #3a3f4d; color: #ccc;" onclick="window.location.href='/my-scores/'">
+            MY SCORES 📊
+        </button>
+        <button class="action-btn" style="background-color: #3a3f4d; color: #ccc;" onclick="window.location.href='/leaderboard/'">
+            LEADERBOARD 🏆
+        </button>
+    </div>
+
+    <div id="gameScreen" class="hidden">
+        <h1>SPELLCASTING BATTLE</h1>
+        
+        <div class="stats-row">
+            <div class="score-box">MONSTERS DEFEATED: <span id="score">0</span></div>
+            <div class="timer-box">⏱️ <span id="timerDisplay">15</span>s</div>
+            <div class="hearts-box" id="heartsDisplay">❤️ ❤️ ❤️</div>
+        </div>
+
+        <!-- NEW BATTLE ARENA HUB -->
+        <div class="battle-arena">
+            <div id="enemyName" class="enemy-name">MINION</div>
+            <div class="health-bar-container">
+                <div id="enemyHealth" class="health-bar"></div>
+            </div>
+            <div id="enemySprite" class="enemy-sprite">👻</div>
+        </div>
+
+        <div style="background: #15181f; border: 2px dashed #b68f40; padding: 15px; border-radius: 8px; margin: 15px 0;">
+            <div style="font-size: 0.8rem; color: #aaa; letter-spacing: 2px;">READ ALOUD TO CAST:</div>
+            <div id="targetSpellDisplay" style="font-size: 2.2rem; color: #ffeb3b; font-weight: bold; text-transform: uppercase; margin-top: 5px; letter-spacing: 1px;">---</div>
+        </div>
+
+        <div id="status" class="status-box">Preparing spell...</div>
+        <div id="spellingDisplay" class="spelling-display">---</div>
+
+        <button class="action-btn" style="background-color: #9c27b0;" id="repeatBtn" onclick="repeatWord()">HOW DO I CAST IT?</button>
+        <button class="action-btn" style="background-color: #ff9800;" id="clearBtn" onclick="clearSpelling()">RESET INCANTATION</button>
+        <button class="action-btn" style="background-color: #757575;" id="skipBtn" onclick="nextWord()">FLEE BATTLE</button>
+        
+        <button class="action-btn" style="background-color: #d32f2f; display: block; margin: 30px auto 0 auto; font-size: 0.9rem; padding: 8px 16px;" id="exitBtn" onclick="returnToMenu()">RETREAT TO MENU</button>
+    </div>
+</div>
+
+<script>
+    // --- VIDEO INTRO HOOK ROUTING ---
+    const video = document.getElementById('introVideo');
+    // Automatically unmute the video the first time the user clicks anywhere on the page
+document.body.addEventListener('click', function() {
+    const video = document.getElementById('introVideo');
+    if (video) {
+        video.muted = false; // Turn the sound back on!
+    }
+}, { once: true }); // { once: true } ensures this click tracker runs only one time
+    
+    video.onended = function() {
+        endIntroSequence();
+    };
+
+    function endIntroSequence() {
+        const overlay = document.getElementById('introOverlay');
+        overlay.style.opacity = '0';
+        
+        setTimeout(() => {
+            overlay.classList.add('hidden');
+        }, 1000);
+    }
+
+    // --- GAME ENGINE STATE ---
+    const difficultyWords = {
+        easy: ["lumos", "nox", "incendio", "protego", "silencio", "reducto", "accio", "diffindo", "aguamenti", "evanesco", "imperio", "revelio", "tergeo", "finite", "relashio", "alohomora", "morsmordre", "avis", "crucio", "enervate"],
+        medium: ["expecto patronum", "sectumsempra", "expelliarmus", "wingardium leviosa", "arresto momentum", "petrificus totalus", "riddikulus", "confundo", "avada kedavra", "priori incantatem", "legilimens", "obliviate", "cave inimicum", "vade retro", "ignis fatuus", "corpus inane", "magna veritas", "aqua eructo", "salvio hexia", "exura vita"],
+        hard: ["piertotum locomotor", "lacarnum inflamarae", "serpensortia veni", "locomotor mortis", "tarantallegra passus", "furnunculus maxima", "densaugeo cresco", "deletrius pulveris", "impedimenta obstructo", "incarcerous vincula", "mobilicorpus movere", "muffliato surdus", "oppugno inimicos", "sonorus maxima", "quietus deminuere", "waddiwasi projectum", "homenum revelio", "fianto duri", "partis temporus", "vulnera sanentur"]
+    };
+
+    const monsterNames = ["Shadow Demon", "Wraith", "Abyssal Ghoul", "Banshee", "Undead Skeleton", "Poltergeist"];
+    const monsterSprites = ["👿", "👻", "👹", "💀", "🧛", "🧟"];
+
+    let selectedDifficultySetting = "easy";
+    let wordsPool = [];
+    let currentWord = "";
+    let finalSpelling = "";
+    let score = 0;
+    let lives = 3;
+    let gameOver = false;
+    let timeLeft = 15;
+    let countdownInterval = null;
+
+    const synth = window.speechSynthesis;
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const recognition = new SpeechRecognition();
+    
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    recognition.lang = 'en-US';
+
+    function selectDifficulty(level) {
+        selectedDifficultySetting = level;
+        const buttons = document.querySelectorAll('.diff-btn');
+        buttons.forEach(btn => {
+            if (btn.getAttribute('data-diff') === level) {
+                btn.classList.add('selected');
+            } else {
+                btn.classList.remove('selected');
+            }
+        });
+    }
+
+    function startGame() {
+        wordsPool = [...difficultyWords[selectedDifficultySetting]];
+        score = 0;
+        lives = 3;
+        gameOver = false;
+        finalSpelling = "";
+
+        document.getElementById('score').innerText = score;
+        renderHearts();
+        
+        document.getElementById('repeatBtn').disabled = false;
+        document.getElementById('clearBtn').disabled = false;
+        document.getElementById('skipBtn').disabled = false;
+
+        document.getElementById('menuScreen').classList.add('hidden');
+        document.getElementById('gameScreen').classList.remove('hidden');
+
+        setTimeout(nextWord, 500);
+        
+        setTimeout(startListening, 2000); 
+    }
+
+    function returnToMenu() {
+        stopTimer();
+        recognition.stop();
+        if (synth.speaking) synth.cancel();
+
+        document.getElementById('gameScreen').classList.add('hidden');
+        document.getElementById('menuScreen').classList.remove('hidden');
+    }
+
+    function speak(text) {
+        if (synth.speaking) synth.cancel();
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.rate = 0.9;
+        synth.speak(utterance);
+    }
+
+    function renderHearts() {
+        let heartsStr = "";
+        for (let i = 0; i < 3; i++) {
+            heartsStr += (i < lives) ? "❤️ " : "🖤 "; 
+        }
+        document.getElementById('heartsDisplay').innerText = heartsStr;
+    }
+
+    function startTimer() {
+        stopTimer();
+        timeLeft = 15;
+        document.getElementById('timerDisplay').innerText = timeLeft;
+        
+        countdownInterval = setInterval(() => {
+            timeLeft--;
+            document.getElementById('timerDisplay').innerText = timeLeft;
+            
+            if (timeLeft <= 0) {
+                stopTimer();
+                handleTimeOut();
+            }
+        }, 1000);
+    }
+
+    function stopTimer() {
+        if (countdownInterval) clearInterval(countdownInterval);
+    }
+
+    function handleTimeOut() {
+        if (gameOver) return;
+        lives--;
+        renderHearts();
+        recognition.stop();
+
+        if (lives <= 0) {
+            triggerGameOver();
+        } else {
+            document.getElementById('status').innerText = "⏰ TIME OUT! Heart lost. Loading next word.";
+            document.getElementById('spellingDisplay').style.color = "#f44336";
+            speak("Time is up! You lost a heart. Moving to the next word.");
+            
+            setTimeout(nextWord, 5000);
+            setTimeout(startListening, 5500);
+        }
+    }
+
+    function nextWord() {
+        if (gameOver) return;
+
+        if (wordsPool.length === 0) {
+            gameOver = true;
+            stopTimer();
+            document.getElementById('status').innerText = "🏆 VICTORY! You have cleared the dungeon!";
+            document.getElementById('targetSpellDisplay').innerText = "CLEAR";
+            document.getElementById('spellingDisplay').innerText = "VICTORY";
+            document.getElementById('spellingDisplay').style.color = "#4caf50";
+            disableButtons();
+            speak("Congratulations! You have successfully defeated all enemies in this area!");
+            return;
+        }
+
+        document.getElementById('enemyHealth').style.width = "100%";
+
+        const randomMonsterIdx = Math.floor(Math.random() * monsterSprites.length);
+        document.getElementById('enemyName').innerText = monsterNames[randomMonsterIdx].toUpperCase();
+        document.getElementById('enemySprite').innerText = monsterSprites[randomMonsterIdx];
+
+        const randomIndex = Math.floor(Math.random() * wordsPool.length);
+        currentWord = wordsPool[randomIndex];
+        finalSpelling = "";
+        
+        document.getElementById('targetSpellDisplay').innerText = currentWord;
+        
+        document.getElementById('spellingDisplay').innerText = "---";
+        document.getElementById('status').innerText = "An enemy approaches! Prepare your spell...";
+        document.getElementById('spellingDisplay').style.color = "#00bcd4"; 
+        
+        speak("Cast your spell!");
+    }
+
+    function repeatWord() {
+        if (gameOver) return;
+        document.getElementById('status').innerText = "Ready to receive incantation...";
+        speak("Read the scroll!");
+    }
+
+    function triggerGameOver() {
+        gameOver = true;
+        stopTimer();
+        document.getElementById('status').innerText = "❌ GAME OVER! You ran out of hearts.";
+        document.getElementById('spellingDisplay').innerText = "GAME OVER";
+        document.getElementById('spellingDisplay').style.color = "#f44336";
+        disableButtons();
+        speak("Game over. Systems powering down.");
+    }
+
+    function disableButtons() { 
+        document.getElementById('repeatBtn').disabled = true;
+        document.getElementById('clearBtn').disabled = true;
+        document.getElementById('skipBtn').disabled = true;
+    }
+
+    function startListening() {
+        if (gameOver) return;
+        
+        document.getElementById('status').innerText = "Listening live... Speak the incantation!";
+        finalSpelling = "";
+        
+        startTimer(); 
+        
+        try {
+            recognition.start();
+        } catch(err) {
+            console.log("Microphone is already active.");
+        }
+    }
+
+    function clearSpelling() {
+        if (gameOver) return;
+        finalSpelling = "";
+        document.getElementById('spellingDisplay').innerText = "---";
+        document.getElementById('spellingDisplay').style.color = "#00bcd4"; 
+        document.getElementById('status').innerText = "Input cleared! Speak clearly now.";
+    }
+
+    // --- AUDIO VALIDATION ENGINE ---
+    recognition.onresult = function(event) {
+        if (gameOver) return;
+        let interimTranscript = "";
+
+        for (let i = event.resultIndex; i < event.results.length; ++i) {
+            let transcriptChunk = event.results[i][0].transcript.toLowerCase();
+            let cleanChunk = transcriptChunk.replace(/[^a-z]/g, "");
+
+            if (event.results[i].isFinal) {
+                finalSpelling += cleanChunk;
+            } else {
+                interimTranscript = cleanChunk;
+            }
+        }
+
+        let liveTotalSpelling = finalSpelling + interimTranscript;
+        document.getElementById('spellingDisplay').innerText = liveTotalSpelling.split("").join(" ");
+
+        if (liveTotalSpelling === currentWord) {
+            score++;
+            stopTimer();
+            
+            const sprite = document.getElementById('enemySprite');
+            sprite.classList.add('monster-hit');
+            setTimeout(() => {
+                sprite.classList.remove('monster-hit');
+            }, 500); 
+
+            document.getElementById('enemyHealth').style.width = "0%";
+            
+            document.getElementById('score').innerText = score;
+            document.getElementById('status').innerText = "💥 Critical Hit! Enemy defeated!";
+            document.getElementById('spellingDisplay').style.color = "#4caf50";
+            speak("Target destroyed!");
+            
+            wordsPool = wordsPool.filter(w => w !== currentWord);
+            
+            submitScoreToDjango(score);
+            recognition.stop(); 
+            setTimeout(nextWord, 2000);
+            setTimeout(startListening, 4500); 
+        }
+        else if (liveTotalSpelling.length >= currentWord.length && liveTotalSpelling !== currentWord) {
+            lives--;
+            stopTimer();
+            renderHearts();
+            recognition.stop();
+
+            const sprite = document.getElementById('enemySprite');
+            sprite.classList.add('monster-strike');
+            setTimeout(() => {
+                sprite.classList.remove('monster-strike');
+            }, 400);
+
+            if (lives <= 0) {
+                triggerGameOver();
+            } else {
+                document.getElementById('status').innerText = "Wrong spelling! Heart lost. Trying next word.";
+                document.getElementById('spellingDisplay').style.color = "#f44336"; 
+                speak("Not quite. You lost a heart. The correct spelling was " + currentWord.split("").join(" "));
+                
+                setTimeout(nextWord, 5000);
+                setTimeout(startListening, 6500);
+            }
+        }
+    };
+
+    recognition.onend = function() {
+        if (!gameOver) {
+            console.log("Microphone paused.");
+        }
+    };
+
+    function submitScoreToDjango(currentScore) {
+        fetch('/api/save-score/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: JSON.stringify({ name: '{{ player_name }}', score: currentScore, difficulty: selectedDifficultySetting })
+        })
+        .then(response => response.json())
+        .then(data => console.log("Score logged:", data))
+        .catch(err => console.error("Database connection failed:", err));
+    }
+</script>
+
+</body>
+</html>

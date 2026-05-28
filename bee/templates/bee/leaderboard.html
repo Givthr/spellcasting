@@ -1,0 +1,222 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Spellcasting – Leaderboard</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&family=Cinzel:wght@600&family=Raleway:wght@400;600;700&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --gold:      #C8972A;
+      --gold-lt:   #E8B84B;
+      --blue-glow: #4FC3F7;
+      --dark-bg:   #1A1E24;
+      --card-bg:   #22272E;
+      --card-border: #2E3A4A;
+      --text:      #D0D8E0;
+      --muted:     #7A8A9A;
+    }
+
+    html, body {
+      min-height: 100vh;
+      background: var(--dark-bg);
+      font-family: 'Raleway', sans-serif;
+      color: var(--text);
+    }
+
+    #stars { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
+
+    .page {
+      position: relative; z-index: 10;
+      min-height: 100vh;
+      display: flex; flex-direction: column; align-items: center;
+      padding: 40px 20px;
+    }
+
+    .site-title {
+      font-family: 'Cinzel Decorative', cursive;
+      font-size: clamp(1.4rem, 3.5vw, 2.2rem);
+      color: var(--gold); letter-spacing: 4px; text-transform: uppercase;
+      margin-bottom: 4px;
+      text-shadow: 0 0 20px rgba(200,151,42,.6), 0 0 60px rgba(79,195,247,.3);
+    }
+    .site-sub {
+      font-family: 'Cinzel', serif; font-size: .78rem; color: var(--muted);
+      letter-spacing: 3px; text-transform: uppercase; margin-bottom: 36px;
+    }
+
+    .card {
+      background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 12px;
+      padding: 36px 40px; width: 100%; max-width: 750px;
+      box-shadow: 0 0 0 1px rgba(79,195,247,.08), 0 20px 60px rgba(0,0,0,.6), inset 0 1px 0 rgba(255,255,255,.04);
+      animation: cardIn .6s cubic-bezier(.22,1,.36,1) both;
+    }
+    @keyframes cardIn {
+      from { opacity: 0; transform: translateY(30px) scale(.97); }
+      to   { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    .card-heading {
+      font-family: 'Cinzel', serif; font-size: 1.1rem; color: var(--gold-lt);
+      letter-spacing: 2px; text-transform: uppercase; text-align: center; margin-bottom: 24px;
+    }
+
+    .tabs {
+      display: flex; justify-content: center; gap: 8px; margin-bottom: 28px;
+    }
+    .tab-btn {
+      padding: 10px 24px; border: 2px solid var(--card-border); border-radius: 6px;
+      background: transparent; color: var(--muted); font-family: 'Raleway', sans-serif;
+      font-size: .85rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;
+      cursor: pointer; transition: all .2s;
+    }
+    .tab-btn:hover { border-color: var(--gold); color: var(--gold); }
+    .tab-btn.active-easy { background: rgba(76,175,80,.15); color: #81C784; border-color: rgba(76,175,80,.5); }
+    .tab-btn.active-medium { background: rgba(255,152,0,.15); color: #FFB74D; border-color: rgba(255,152,0,.5); }
+    .tab-btn.active-hard { background: rgba(229,57,53,.15); color: #EF5350; border-color: rgba(229,57,53,.5); }
+
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    table { width: 100%; border-collapse: collapse; }
+    thead th {
+      font-size: .72rem; font-weight: 700; color: var(--muted); text-transform: uppercase;
+      letter-spacing: 1.5px; padding: 10px 12px; border-bottom: 1px solid var(--card-border); text-align: left;
+    }
+    tbody tr { transition: background .2s; }
+    tbody tr:hover { background: rgba(79,195,247,.04); }
+    tbody td {
+      padding: 14px 12px; font-size: .95rem; font-weight: 600;
+      border-bottom: 1px solid rgba(46,58,74,.5);
+    }
+
+    .rank-cell { width: 50px; text-align: center; }
+    .rank-badge {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 32px; height: 32px; border-radius: 50%; font-size: .85rem; font-weight: 700;
+    }
+    .rank-1 { background: linear-gradient(135deg, #FFD700, #FFA000); color: #1A1206; }
+    .rank-2 { background: linear-gradient(135deg, #B0BEC5, #78909C); color: #1A1E24; }
+    .rank-3 { background: linear-gradient(135deg, #CD7F32, #A0522D); color: #fff; }
+    .rank-default { background: #2E3A4A; color: var(--muted); }
+
+    .name-cell { color: #E8EDF2; }
+    .score-cell { color: var(--gold-lt); font-family: 'Cinzel', serif; font-size: 1.05rem; }
+
+    .empty-state { text-align: center; padding: 40px 20px; color: var(--muted); font-size: 1rem; }
+
+    .footer-nav { text-align: center; margin-top: 24px; display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+    .btn-nav {
+      display: inline-block; padding: 12px 28px;
+      border: none; border-radius: 8px;
+      font-family: 'Cinzel', serif; font-size: .9rem; font-weight: 600;
+      letter-spacing: 2px; text-transform: uppercase; cursor: pointer; text-decoration: none;
+      transition: transform .15s, box-shadow .15s, filter .15s;
+    }
+    .btn-nav:hover { transform: translateY(-2px); filter: brightness(1.08); }
+    .btn-gold {
+      background: linear-gradient(135deg, #B8851E 0%, #D4A030 50%, #B8851E 100%);
+      color: #1A1206; box-shadow: 0 4px 20px rgba(200,151,42,.35);
+    }
+    .btn-dark {
+      background: #2E3A4A; color: var(--text); box-shadow: 0 4px 15px rgba(0,0,0,.3);
+    }
+  </style>
+</head>
+<body>
+
+<canvas id="stars"></canvas>
+
+<div class="page">
+  <div class="site-title">Spellcasting</div>
+  <div class="site-sub">Overall Leaderboard</div>
+
+  <div class="card">
+    <div class="card-heading">Top Spellers</div>
+
+    <div class="tabs">
+      <button class="tab-btn active-easy" data-tab="easy" onclick="switchTab('easy')">Easy</button>
+      <button class="tab-btn" data-tab="medium" onclick="switchTab('medium')">Medium</button>
+      <button class="tab-btn" data-tab="hard" onclick="switchTab('hard')">Hard</button>
+    </div>
+
+    {% for diff, entries in panels.items %}
+    <div class="tab-panel {% if diff == 'easy' %}active{% endif %}" id="panel-{{ diff }}">
+      {% if entries %}
+      <table>
+        <thead>
+          <tr>
+            <th class="rank-cell">#</th>
+            <th>Player</th>
+            <th>Score</th>
+            <th>Date</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for entry in entries %}
+          <tr>
+            <td class="rank-cell">
+              <span class="rank-badge {% if forloop.counter == 1 %}rank-1{% elif forloop.counter == 2 %}rank-2{% elif forloop.counter == 3 %}rank-3{% else %}rank-default{% endif %}">
+                {{ forloop.counter }}
+              </span>
+            </td>
+            <td class="name-cell">{{ entry.name }}</td>
+            <td class="score-cell">{{ entry.score }}</td>
+            <td style="color: var(--muted); font-size: .82rem;">{{ entry.date_achieved|date:"M d, Y" }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      <div class="empty-state">No scores yet for this difficulty.</div>
+      {% endif %}
+    </div>
+    {% endfor %}
+  </div>
+
+  <div class="footer-nav">
+    <a href="/?skip_intro=true" class="btn-nav btn-gold">Back to Menu</a>
+    <a href="/my-scores/" class="btn-nav btn-dark">My Scores</a>
+  </div>
+</div>
+
+<script>
+function switchTab(diff) {
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => {
+    b.className = 'tab-btn';
+  });
+  document.getElementById('panel-' + diff).classList.add('active');
+  const btn = document.querySelector('.tab-btn[data-tab="' + diff + '"]');
+  btn.classList.add('active-' + diff);
+}
+
+(function() {
+  const c = document.getElementById('stars');
+  const ctx = c.getContext('2d');
+  let W, H, stars = [];
+  function resize() {
+    W = c.width = window.innerWidth; H = c.height = window.innerHeight;
+    stars = Array.from({length: 180}, () => ({
+      x: Math.random()*W, y: Math.random()*H,
+      r: Math.random()*1.4+.2, a: Math.random(), da: (Math.random()-.5)*.008
+    }));
+  }
+  function draw() {
+    ctx.clearRect(0,0,W,H);
+    stars.forEach(s => {
+      s.a = Math.max(.05, Math.min(1, s.a + s.da));
+      if (s.a <= .05 || s.a >= 1) s.da *= -1;
+      ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, Math.PI*2);
+      ctx.fillStyle = `rgba(200,220,255,${s.a})`; ctx.fill();
+    });
+    requestAnimationFrame(draw);
+  }
+  window.addEventListener('resize', resize); resize(); draw();
+})();
+</script>
+</body>
+</html>

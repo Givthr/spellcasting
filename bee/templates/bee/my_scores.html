@@ -1,0 +1,174 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Spellcasting – My Scores</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&family=Cinzel:wght@600&family=Raleway:wght@400;600;700&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --gold:      #C8972A;
+      --gold-lt:   #E8B84B;
+      --blue-glow: #4FC3F7;
+      --dark-bg:   #1A1E24;
+      --card-bg:   #22272E;
+      --card-border: #2E3A4A;
+      --text:      #D0D8E0;
+      --muted:     #7A8A9A;
+    }
+
+    html, body {
+      min-height: 100vh;
+      background: var(--dark-bg);
+      font-family: 'Raleway', sans-serif;
+      color: var(--text);
+    }
+
+    #stars { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
+
+    .page {
+      position: relative; z-index: 10;
+      min-height: 100vh;
+      display: flex; flex-direction: column; align-items: center;
+      padding: 40px 20px;
+    }
+
+    .site-title {
+      font-family: 'Cinzel Decorative', cursive;
+      font-size: clamp(1.4rem, 3.5vw, 2.2rem);
+      color: var(--gold); letter-spacing: 4px; text-transform: uppercase;
+      margin-bottom: 4px;
+      text-shadow: 0 0 20px rgba(200,151,42,.6), 0 0 60px rgba(79,195,247,.3);
+    }
+    .site-sub {
+      font-family: 'Cinzel', serif; font-size: .78rem; color: var(--muted);
+      letter-spacing: 3px; text-transform: uppercase; margin-bottom: 36px;
+    }
+
+    .player-name {
+      font-family: 'Cinzel', serif; font-size: 1.3rem; color: var(--blue-glow);
+      letter-spacing: 2px; margin-bottom: 28px;
+      text-shadow: 0 0 15px rgba(79,195,247,.4);
+    }
+
+    .cards-grid {
+      display: flex; gap: 20px; flex-wrap: wrap; justify-content: center;
+      width: 100%; max-width: 900px;
+    }
+
+    .card {
+      background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 12px;
+      padding: 28px 32px; flex: 1; min-width: 250px; max-width: 280px;
+      box-shadow: 0 0 0 1px rgba(79,195,247,.08), 0 20px 60px rgba(0,0,0,.6), inset 0 1px 0 rgba(255,255,255,.04);
+      animation: cardIn .6s cubic-bezier(.22,1,.36,1) both;
+      text-align: center;
+    }
+    @keyframes cardIn {
+      from { opacity: 0; transform: translateY(30px) scale(.97); }
+      to   { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    .card-diff {
+      display: inline-block; padding: 4px 14px; border-radius: 4px;
+      font-size: .75rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 1.5px; margin-bottom: 20px;
+    }
+    .card-easy { background: rgba(76,175,80,.15); color: #81C784; border: 1px solid rgba(76,175,80,.3); }
+    .card-medium { background: rgba(255,152,0,.15); color: #FFB74D; border: 1px solid rgba(255,152,0,.3); }
+    .card-hard { background: rgba(229,57,53,.15); color: #EF5350; border: 1px solid rgba(229,57,53,.3); }
+
+    .best-label {
+      font-size: .7rem; color: var(--muted); text-transform: uppercase;
+      letter-spacing: 1.5px; margin-bottom: 6px;
+    }
+    .best-score {
+      font-family: 'Cinzel', serif; font-size: 2.8rem; color: var(--gold-lt);
+      font-weight: 700; margin-bottom: 8px;
+      text-shadow: 0 0 20px rgba(200,151,42,.3);
+    }
+    .best-date {
+      font-size: .78rem; color: var(--muted);
+    }
+
+    .no-score {
+      font-size: 1rem; color: var(--muted); padding: 20px 0;
+    }
+
+    .footer-nav { text-align: center; margin-top: 32px; display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+    .btn-nav {
+      display: inline-block; padding: 12px 28px;
+      border: none; border-radius: 8px;
+      font-family: 'Cinzel', serif; font-size: .9rem; font-weight: 600;
+      letter-spacing: 2px; text-transform: uppercase; cursor: pointer; text-decoration: none;
+      transition: transform .15s, box-shadow .15s, filter .15s;
+    }
+    .btn-nav:hover { transform: translateY(-2px); filter: brightness(1.08); }
+    .btn-gold {
+      background: linear-gradient(135deg, #B8851E 0%, #D4A030 50%, #B8851E 100%);
+      color: #1A1206; box-shadow: 0 4px 20px rgba(200,151,42,.35);
+    }
+    .btn-dark {
+      background: #2E3A4A; color: var(--text); box-shadow: 0 4px 15px rgba(0,0,0,.3);
+    }
+  </style>
+</head>
+<body>
+
+<canvas id="stars"></canvas>
+
+<div class="page">
+  <div class="site-title">Spellcasting</div>
+  <div class="site-sub">My Scores</div>
+  <div class="player-name">{{ player_name }}</div>
+
+  <div class="cards-grid">
+    {% for diff in diffs %}
+    <div class="card" style="animation-delay: {{ forloop.counter0 }}00ms;">
+      <div class="card-diff card-{{ diff.key }}">{{ diff.label }}</div>
+      {% if diff.entry %}
+      <div class="best-label">Best Score</div>
+      <div class="best-score">{{ diff.entry.score }}</div>
+      <div class="best-date">{{ diff.entry.date_achieved|date:"M d, Y" }}</div>
+      {% else %}
+      <div class="no-score">Not yet played</div>
+      {% endif %}
+    </div>
+    {% endfor %}
+  </div>
+
+  <div class="footer-nav">
+    <a href="/?skip_intro=true" class="btn-nav btn-gold">Back to Menu</a>
+    <a href="/leaderboard/" class="btn-nav btn-dark">Leaderboard</a>
+  </div>
+</div>
+
+<script>
+(function() {
+  const c = document.getElementById('stars');
+  const ctx = c.getContext('2d');
+  let W, H, stars = [];
+  function resize() {
+    W = c.width = window.innerWidth; H = c.height = window.innerHeight;
+    stars = Array.from({length: 180}, () => ({
+      x: Math.random()*W, y: Math.random()*H,
+      r: Math.random()*1.4+.2, a: Math.random(), da: (Math.random()-.5)*.008
+    }));
+  }
+  function draw() {
+    ctx.clearRect(0,0,W,H);
+    stars.forEach(s => {
+      s.a = Math.max(.05, Math.min(1, s.a + s.da));
+      if (s.a <= .05 || s.a >= 1) s.da *= -1;
+      ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, Math.PI*2);
+      ctx.fillStyle = `rgba(200,220,255,${s.a})`; ctx.fill();
+    });
+    requestAnimationFrame(draw);
+  }
+  window.addEventListener('resize', resize); resize(); draw();
+})();
+</script>
+</body>
+</html>

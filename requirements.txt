@@ -1,0 +1,5 @@
+django
+SpeechRecognition
+pyttsx3
+pyaudio
+psycopg2-binary
