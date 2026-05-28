@@ -9,10 +9,11 @@ class PlayerProfile(models.Model):
         return self.nickname
 
 class PlayerScore(models.Model):
-    name = models.CharField(max_length=50, default="Anonymous")
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="scores")
     score = models.IntegerField()
     difficulty = models.CharField(max_length=20, default="easy")
     date_achieved = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"{self.name} - {self.score} ({self.difficulty})"
+        profile_name = getattr(self.user.playerprofile, 'nickname', self.user.username)
+        return f"{profile_name} - {self.score} ({self.difficulty})"

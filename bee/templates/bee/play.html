@@ -944,17 +944,34 @@
     }
 
     function submitScoreToDjango(currentScore) {
+        const currentDifficulty = typeof selectedDifficultySetting !== 'undefined' ? selectedDifficultySetting : 'easy';
+
         fetch('/api/save-score/', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': '{{ csrf_token }}'
+            headers: { 
+                'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ name: '{{ player_name }}', score: currentScore, difficulty: selectedDifficultySetting })
+            body: JSON.stringify({
+                score: currentScore,            
+                difficulty: currentDifficulty   
+            })
         })
-        .then(response => response.json())
-        .then(data => console.log("Score logged:", data))
-        .catch(err => console.error("Database connection failed:", err));
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.status === 'success') {
+                console.log("✨ Score locked into PostgreSQL successfully!");
+            } else {
+                console.error("Database save failed:", data.message);
+            }
+        })
+        .catch(error => {
+            console.error("Error reporting score to server:", error);
+        });
     }
 </script>
 

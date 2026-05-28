@@ -34,11 +34,7 @@ def register_view(request):
 
 @login_required
 def game_view(request):
-    nickname = request.user.username
-    try:
-        nickname = request.user.playerprofile.nickname
-    except PlayerProfile.DoesNotExist:
-        pass
+    nickname = getattr(request.user.playerprofile, 'nickname', request.user.username)
     return render(request, 'bee/play.html', {'player_name': nickname})
 
 @login_required
@@ -46,20 +42,24 @@ def leaderboard_view(request):
     from collections import OrderedDict
     panels = OrderedDict()
     for key in ('easy', 'medium', 'hard'):
-        panels[key] = list(PlayerScore.objects.filter(difficulty=key).order_by('-score')[:10])
+        # Optimization: select_related forces Postgres to perform a JOIN operation,
+        # fetching profiles in a single query rather than hitting the database for every single row.
+        panels[key] = list(
+            PlayerScore.objects.filter(difficulty=key)
+            .select_related('user__playerprofile')
+            .order_by('-score')[:10]
+        )
     return render(request, 'bee/leaderboard.html', {'panels': panels})
 
 @login_required
 def my_scores_view(request):
-    nickname = request.user.username
-    try:
-        nickname = request.user.playerprofile.nickname
-    except PlayerProfile.DoesNotExist:
-        pass
+    nickname = getattr(request.user.playerprofile, 'nickname', request.user.username)
     diffs = []
     for key, label in [('easy', 'Easy'), ('medium', 'Medium'), ('hard', 'Hard')]:
-        entry = PlayerScore.objects.filter(name=nickname, difficulty=key).first()
+        # Cleanly look up the specific row bound to this user session
+        entry = PlayerScore.objects.filter(user=request.user, difficulty=key).first()
         diffs.append({'key': key, 'label': label, 'entry': entry})
+        
     return render(request, 'bee/my_scores.html', {
         'diffs': diffs, 'player_name': nickname,
     })
@@ -68,19 +68,22 @@ def my_scores_view(request):
 def save_score(request):
     if request.method == 'POST':
         try:
+            # Check session middleware directly—no trusting client strings
+            if not request.user.is_authenticated:
+                return JsonResponse({'status': 'error', 'message': 'Unauthorized account.'}, status=401)
+
             data = json.loads(request.body)
-            name = data.get('name', 'Anonymous')
             new_score = data.get('score', 0)
             difficulty = data.get('difficulty', 'easy')
 
-            existing = PlayerScore.objects.filter(name=name, difficulty=difficulty).first()
+            existing = PlayerScore.objects.filter(user=request.user, difficulty=difficulty).first()
             if existing:
                 if new_score > existing.score:
                     existing.score = new_score
                     existing.date_achieved = timezone.now()
                     existing.save()
             else:
-                PlayerScore.objects.create(name=name, score=new_score, difficulty=difficulty)
+                PlayerScore.objects.create(user=request.user, score=new_score, difficulty=difficulty)
 
             return JsonResponse({'status': 'success'})
         except Exception as e:
