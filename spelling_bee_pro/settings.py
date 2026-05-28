@@ -1,13 +1,14 @@
 from pathlib import Path
 import os
+import dj_database_url 
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = "django-insecure-&0jch_y3^c_z3jm7nv%(p#3q@37$e93)!b#t(_3c3cmrvb8w)a"
+SECRET_KEY = os.environ.get("SECRET_KEY", "django-insecure-&0jch_y3^c_z3jm7nv%(p#3q@37$e93)!b#t(_3c3cmrvb8w)a")
 
-DEBUG = True
+DEBUG = os.environ.get("DEBUG", "True") == "True"
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["*"]
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -21,6 +22,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware", # Optional: good for static assets in production
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -55,6 +57,9 @@ DATABASES = {
         "NAME": BASE_DIR / "db.sqlite3",
     }
 }
+
+if 'DATABASE_URL' in os.environ and os.environ.get('DATABASE_URL') != '':
+    DATABASES['default'] = dj_database_url.config(conn_max_age=600, ssl_require=True)
 
 AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
