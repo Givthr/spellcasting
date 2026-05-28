@@ -1,5 +1,12 @@
 {
-  "packages": [
-    "portaudio19-dev"
-  ]
+  "$schema": "https://schema.railpack.com",
+  "buildAptPackages": [
+    "portaudio19-dev",
+    "g++"
+  ],
+  "deploy": {
+    "aptPackages": [
+      "libportaudio2"
+    ]
+  }
 }
