@@ -3,3 +3,5 @@ SpeechRecognition
 pyttsx3
 pyaudio
 psycopg2-binary
+dj-database-url
+gunicorn
