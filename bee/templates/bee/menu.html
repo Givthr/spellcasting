@@ -228,13 +228,13 @@
                 The ancient layout chambers of the Arena have broken open. Vile monsters and aberrant phantoms are ascending from the dark. Your sword cannot pierce them, and your armor cannot hold them back. Your only salvation lies in the old magic.
             </p>
             <div class="lore-instruction">
-                <span>🎙️ Speak the incantations, letter by letter, to cast your spells and banish the horde.</span>
+                <span>Spell the incantations, letter by letter, to cast your spells and banish the horde.</span>
             </div>
         </div>
         
         <div id="difficultyWrapper" class="hidden">
             <div class="difficulty-section">
-                <div class="difficulty-label">CHOOSE DIFFICULTY:</div>
+                <div class="difficulty-label">CHOOSE YOUR PATH:</div>
                 <button class="diff-btn" data-diff="easy" onclick="selectDifficulty('easy')">EASY</button>
                 <button class="diff-btn" data-diff="medium" onclick="selectDifficulty('medium')">MEDIUM</button>
                 <button class="diff-btn" data-diff="hard" onclick="selectDifficulty('hard')">HARD</button>
@@ -242,12 +242,12 @@
 
             <div style="margin: 20px 0;">
                 <p style="font-family: 'Cinzel', serif; color: var(--muted); font-size: 0.8rem; line-height: 1.6; letter-spacing: 0.5px;">
-                    <strong style="color: var(--gold-lt); letter-spacing: 1px;">Rules:</strong> Listen to the AI speak a word, then spell it out loud letter-by-letter. You have 3 hearts, 15 seconds per word, and you can repeat the audio clue at any time!
+                    <strong style="color: var(--gold-lt); letter-spacing: 1px;">Note:</strong> Listen to the Talking Tome say the incantation, then spell it out loud letter-by-letter. You have 3 lives, 15 seconds per incantation, and you can ask the Talking Tome to repeat the incantation if you didn't pay attention!
                 </p>
             </div>
         </div>
 
-        <div id="status" class="status-box">Waiting for user gesture...</div>
+        <div id="status" class="status-box">Waiting for verbal connection...</div>
 
         <button id="startTriggerBtn" class="action-btn" style="background-color: #b68f40; font-size: 1.5rem; padding: 15px 30px;" onclick="revealDifficultyOptions()">
             START ADVENTURE
@@ -262,7 +262,7 @@
        <p style="font-family: 'Cinzel', serif; color: #81C784; margin-top: 20px; font-weight: bold; line-height: 1.6; font-size: 0.75rem; letter-spacing: 1px;">
             🎤 Navigate using voice commands:
             <br>
-            <span style="color: var(--muted); font-weight: normal; font-size: 0.7rem; letter-spacing: 0.5px;">Say "Start Game" first, then choose a difficulty. You can also say "My Scores" and "Leaderboard"!"</span>
+            <span style="color: var(--muted); font-weight: normal; font-size: 0.7rem; letter-spacing: 0.5px;">Say "Start" first, then choose a difficulty. You can also say "My Scores" and "Leaderboard"!"</span>
         </p>
     </div>
 </div>
@@ -381,7 +381,7 @@
         const lore = document.getElementById('loreWrapper');
         if (lore) lore.classList.add('hidden');
         
-        document.getElementById('status').innerText = "🎙️ Ready! Say: 'Easy', 'Medium', or 'Hard'";
+        document.getElementById('status').innerText = "🎙️ Ready! Say 'Novice', 'Adept', or 'Master'";
         speak("Select difficulty level.");
     }
 
@@ -436,15 +436,15 @@
             return false;
         }
 
-        if (transcript.includes("easy") || transcript.includes("is he") || transcript.includes("eezi")) { 
+        if (transcript.includes("novice") || transcript.includes("no bees") || transcript.includes("nov eez")) { 
             selectDifficulty("easy"); 
             return true; 
         }
-        if (transcript.includes("medium") || transcript.includes("normal") || transcript.includes("mid")) { 
+        if (transcript.includes("adept") || transcript.includes("a deft") || transcript.includes("a debt")) { 
             selectDifficulty("medium"); 
             return true; 
         }
-        if (transcript.includes("hard") || transcript.includes("heart") || transcript.includes("art")) { 
+        if (transcript.includes("master") || transcript.includes("mass tear") || transcript.includes("mast her")) { 
             selectDifficulty("hard"); 
             return true; 
         }
@@ -460,9 +460,9 @@
             try {
                 menuRecognition.start();
                 if(!isGameInitiated) {
-                    document.getElementById('status').innerText = "🎙️ Menu Mic Active! Say: 'Start Game'";
+                    document.getElementById('status').innerText = "🎙️ Are you ready to enter the Arena? Say 'Start'";
                 } else {
-                    document.getElementById('status').innerText = "🎙️ Choice Active! Say: 'Easy', 'Medium', or 'Hard'";
+                    document.getElementById('status').innerText = "🎙️ Choice Active! Say 'Novice', 'Adept', or 'Master'";
                 }
                 document.getElementById('status').style.color = "#ffeb3b";
             } catch(e) { console.error("Menu engine restart delay:", e); }
