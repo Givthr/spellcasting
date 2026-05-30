@@ -5,97 +5,180 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Spellcasting - Main Menu</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&family=Cinzel:wght@600&family=Raleway:wght@400;600;700&display=swap" rel="stylesheet"/>
     <style>
-        body {
-            background-color: #282c34;
-            color: white;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
-            margin: 0;
-            overflow: hidden;
-        }
-        #introOverlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            background-color: black;
-            z-index: 9999;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: opacity 1s ease-out, visibility 1s;
-        }
-        #introVideo {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-        .skip-intro-btn {
-            position: absolute;
-            bottom: 30px;
-            right: 30px;
-            background-color: rgba(255, 255, 255, 0.2);
-            border: 1px solid rgba(255, 255, 255, 0.4);
-            padding: 8px 16px;
-            font-size: 0.9rem;
-            color: white;
-            border-radius: 4px;
-            cursor: pointer;
-            z-index: 10000;
-        }
-        .skip-intro-btn:hover { background-color: rgba(255, 255, 255, 0.4); }
-        .container {
-            text-align: center;
-            background-color: #1e222b;
-            padding: 40px;
-            border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
-            max-width: 600px;
-            width: 90%;
-        }
-        h1 { color: #b68f40; font-size: 2.5rem; margin-bottom: 10px; }
-        .menu-subtitle { color: #aaa; font-size: 1.2rem; margin-bottom: 30px; }
-        .difficulty-section { margin: 25px 0; }
-        .difficulty-label { font-size: 1.1rem; color: #eee; margin-bottom: 10px; font-weight: bold; }
-        .diff-btn {
-            background-color: #3a3f4d;
-            color: #ccc;
-            padding: 10px 20px;
-            font-size: 1rem;
-            border: 2px solid transparent;
-            border-radius: 6px;
-            cursor: pointer;
-            margin: 5px;
-            transition: all 0.2s;
-        }
-        .diff-btn:hover { background-color: #4e5465; color: white; }
-        .diff-btn.selected[data-diff="easy"] { background-color: #4caf50; color: white; border-color: #81c784; }
-        .diff-btn.selected[data-diff="medium"] { background-color: #ff9800; color: white; border-color: #ffb74d; }
-        .diff-btn.selected[data-diff="hard"] { background-color: #e53935; color: white; border-color: #ef5350; }
-        .status-box { color: #ffeb3b; font-size: 1.2rem; min-height: 40px; margin-bottom: 20px; font-weight: bold; }
-        button.action-btn {
-            background-color: #4caf50;
-            color: white;
-            border: none;
-            padding: 15px 30px;
-            font-size: 1.2rem;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: background 0.2s, transform 0.1s;
-            margin: 10px;
-            font-weight: bold;
-        }
-        button.action-btn:hover { background-color: #45a049; transform: scale(1.02); }
-        .hidden { display: none !important; }
-    </style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+        --gold:      #C8972A;
+        --gold-lt:   #E8B84B;
+        --blue-glow: #4FC3F7;
+        --dark-bg:   #1A1E24;
+        --card-bg:   #22272E;
+        --card-border: #2E3A4A;
+        --text:      #D0D8E0;
+        --muted:     #7A8A9A;
+    }
+
+    body {
+        min-height: 100vh;
+        background: var(--dark-bg);
+        font-family: 'Raleway', sans-serif;
+        color: var(--text);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        margin: 0;
+        overflow: hidden;
+        position: relative;
+    }
+
+    /* Ambient Starfield Layer */
+    #stars { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
+
+    /* Intro Overlay Settings */
+    #introOverlay {
+        position: fixed;
+        top: 0; left: 0;
+        width: 100vw; height: 100vh;
+        background-color: black;
+        z-index: 9999;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: opacity 1s ease-out, visibility 1s;
+    }
+    #introVideo { width: 100%; height: 100%; object-fit: cover; }
+    
+    .skip-intro-btn {
+        position: absolute;
+        bottom: 30px; right: 30px;
+        background-color: rgba(255, 255, 255, 0.2);
+        border: 1px solid rgba(255, 255, 255, 0.4);
+        padding: 8px 16px;
+        font-family: 'Cinzel', serif;
+        font-size: 0.9rem;
+        color: white;
+        border-radius: 4px;
+        cursor: pointer;
+        z-index: 10000;
+        letter-spacing: 1px;
+        transition: background-color 0.2s;
+    }
+    .skip-intro-btn:hover { background-color: rgba(255, 255, 255, 0.4); }
+
+    /* Main Menu Frame */
+    .container {
+        position: relative;
+        z-index: 10;
+        text-align: center;
+        background: var(--card-bg);
+        border: 1px solid var(--card-border);
+        padding: 40px;
+        border-radius: 12px;
+        box-shadow: 0 0 0 1px rgba(79,195,247,.08), 0 20px 60px rgba(0,0,0,.6), inset 0 1px 0 rgba(255,255,255,.04);
+        max-width: 600px;
+        width: 90%;
+        animation: cardIn .6s cubic-bezier(.22,1,.36,1) both;
+    }
+
+    @keyframes cardIn {
+        from { opacity: 0; transform: translateY(30px) scale(.97); }
+        to   { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    h1 {
+        font-family: 'Cinzel Decorative', cursive;
+        font-size: clamp(1.8rem, 4vw, 2.6rem);
+        color: var(--gold);
+        letter-spacing: 4px;
+        text-transform: uppercase;
+        margin-bottom: 4px;
+        text-shadow: 0 0 20px rgba(200,151,42,.6), 0 0 60px rgba(79,195,247,.3);
+    }
+    
+    .menu-subtitle {
+        font-family: 'Cinzel', serif;
+        font-size: .85rem;
+        color: var(--muted);
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        margin-bottom: 30px;
+    }
+
+    /* Difficulty Selection Configurations */
+    .difficulty-section { margin: 25px 0; }
+    .difficulty-label {
+        font-family: 'Cinzel', serif;
+        font-size: 0.9rem;
+        color: var(--text);
+        letter-spacing: 1.5px;
+        margin-bottom: 12px;
+    }
+    
+    .diff-btn {
+        background: #2E3A4A;
+        color: var(--text);
+        padding: 10px 22px;
+        font-family: 'Cinzel', serif;
+        font-size: 0.85rem;
+        font-weight: 600;
+        letter-spacing: 1.5px;
+        border: 1px solid transparent;
+        border-radius: 6px;
+        cursor: pointer;
+        margin: 5px;
+        transition: all 0.2s, transform 0.1s;
+        box-shadow: 0 4px 15px rgba(0,0,0,.2);
+    }
+    .diff-btn:hover {
+        transform: translateY(-2px);
+        border-color: var(--blue-glow);
+        color: white;
+    }
+    
+    /* Dynamic Active Selections matching the Scores theme */
+    .diff-btn.selected[data-diff="easy"] { background: rgba(76,175,80,.2); color: #81C784; border-color: #81C784; box-shadow: 0 0 15px rgba(76,175,80,.3); }
+    .diff-btn.selected[data-diff="medium"] { background: rgba(255,152,0,.2); color: #FFB74D; border-color: #FFB74D; box-shadow: 0 0 15px rgba(255,152,0,.3); }
+    .diff-btn.selected[data-diff="hard"] { background: rgba(229,57,53,.2); color: #EF5350; border-color: #EF5350; box-shadow: 0 0 15px rgba(229,57,53,.3); }
+
+    /* Interactive Status Indicators */
+    .status-box {
+        font-family: 'Cinzel', serif;
+        font-size: 1rem;
+        color: var(--blue-glow);
+        letter-spacing: 1px;
+        min-height: 40px;
+        margin-bottom: 20px;
+        text-shadow: 0 0 10px rgba(79,195,247,.3);
+    }
+
+    /* Functional Menu Navigation Targets */
+    button.action-btn {
+        display: inline-block;
+        padding: 12px 28px;
+        border: none;
+        border-radius: 8px;
+        font-family: 'Cinzel', serif;
+        font-size: .9rem;
+        font-weight: 600;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        cursor: pointer;
+        transition: transform .15s, box-shadow .15s, filter .15s;
+        margin: 8px;
+    }
+    button.action-btn:hover {
+        transform: translateY(-2px);
+        filter: brightness(1.08);
+    }
+
+    .hidden { display: none !important; }
+</style>
 </head>
 <body>
+<canvas id="stars"></canvas>
 
 <div id="introOverlay">
     <video id="introVideo" autoplay muted playsinline>
@@ -149,6 +232,50 @@
     const video = document.getElementById('introVideo');
     let isGameInitiated = false; 
     let shouldMenuRun = false;
+
+    // Ambient Starfield Canvas Renderer Pipeline
+    (function() {
+        const canvas = document.getElementById('stars');
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        let stars = [];
+
+        function resize() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            initStars();
+        }
+
+        function initStars() {
+            stars = [];
+            const count = Math.floor((canvas.width * canvas.height) / 3000);
+            for(let i=0; i<count; i++) {
+                stars.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height,
+                    size: Math.random() * 1.5,
+                    alpha: Math.random(),
+                    speed: 0.005 + Math.random() * 0.015
+                });
+            }
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#ffffff';
+            for(let star of stars) {
+                star.alpha += star.speed;
+                if(star.alpha > 1 || star.alpha < 0) star.speed = -star.speed;
+                ctx.globalAlpha = Math.max(0, star.alpha);
+                ctx.fillRect(star.x, star.y, star.size, star.size);
+            }
+            requestAnimationFrame(draw);
+        }
+
+        window.addEventListener('resize', resize);
+        resize();
+        draw();
+    })();
     
     // Safety tracking timestamp base
     let lastCommandTimestamp = Date.now();
