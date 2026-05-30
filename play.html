@@ -213,7 +213,7 @@
             </p>
         </div>
 
-        <div id="status" class="status-box">Requesting microphone access...</div>
+        <div id="status" class="status-box">Waiting for user gesture...</div>
 
         <button class="action-btn" style="background-color: #b68f40; font-size: 1.5rem; padding: 15px 30px;" onclick="startGame()">
             START GAME
@@ -279,22 +279,21 @@
         const overlay = document.getElementById('introOverlay');
         overlay.style.opacity = '0';
         
-        // Force the browser to trigger the microphone permission dialog immediately on user click/gesture
+        // Force pop mic hardware interface permission popup instantly via the user skip gesture path
         navigator.mediaDevices.getUserMedia({ audio: true })
             .then(function(stream) {
-                console.log("[v0] Microphone access verified.");
-                // Release the temporary hardware stream lock so SpeechRecognition can bind cleanly
-                stream.getTracks().forEach(track => track.stop());
+                console.log("[System] Microphone authorized.");
+                stream.getTracks().forEach(track => track.stop()); // Free baseline trace line
                 
                 setTimeout(() => {
                     overlay.classList.add('hidden');
-                    initMenuVoiceCommands();
-                }, 500);
+                    initMenuVoiceCommands(); 
+                }, 400);
             })
             .catch(function(err) {
-                console.error("[v0] Microphone initialization blocked:", err);
+                console.error("[System] Microphone permission denied:", err);
                 overlay.classList.add('hidden');
-                document.getElementById('status').innerText = "❌ Mic Error! Check your browser address bar permissions.";
+                document.getElementById('status').innerText = "❌ Microphone Blocked! Click the lock/settings icon in the browser address bar.";
                 document.getElementById('status').style.color = "#f44336";
             });
     }
@@ -323,15 +322,27 @@
     const synth = window.speechSynthesis;
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 
-    if (!SpeechRecognition) {
-        alert("This browser doesn't fully support Web Speech API features. Please use Google Chrome or MS Edge.");
-    }
+    // Build independent hardware instances to prevent toggle block overlapping
+    let menuRecognition = null;
+    let battleRecognition = null;
+    let shouldMenuRun = false;
+    let shouldBattleRun = false;
 
-    const recognition = new SpeechRecognition();
-    recognition.continuous = true;
-    recognition.interimResults = true;
-    recognition.lang = 'en-US';
-    let isMenuMode = true;
+    if (SpeechRecognition) {
+        // Setup Instance A: Menu Voice Navigator
+        menuRecognition = new SpeechRecognition();
+        menuRecognition.continuous = true;
+        menuRecognition.interimResults = true;
+        menuRecognition.lang = 'en-US';
+
+        // Setup Instance B: Battle Spell Checker
+        battleRecognition = new SpeechRecognition();
+        battleRecognition.continuous = true;
+        battleRecognition.interimResults = true;
+        battleRecognition.lang = 'en-US';
+    } else {
+        alert("Web Speech API recognition is unavailable. Please run on Google Chrome or Edge.");
+    }
 
     function selectDifficulty(level) {
         selectedDifficultySetting = level;
@@ -348,42 +359,58 @@
 
     function handleMenuCommand(transcript) {
         transcript = transcript.toLowerCase().trim();
-        console.log("[v0] Menu Heard phrase:", transcript);
+        console.log("[Menu Engine Phrase]:", transcript);
 
-        if (transcript.includes("easy")) { selectDifficulty("easy"); return true; }
-        if (transcript.includes("medium") || transcript.includes("normal")) { selectDifficulty("medium"); return true; }
-        if (transcript.includes("hard")) { selectDifficulty("hard"); return true; }
+        if (transcript.includes("easy") || transcript.includes("is he") || transcript.includes("eezi")) { 
+            selectDifficulty("easy"); 
+            return true; 
+        }
+        if (transcript.includes("medium") || transcript.includes("normal") || transcript.includes("mid")) { 
+            selectDifficulty("medium"); 
+            return true; 
+        }
+        if (transcript.includes("hard") || transcript.includes("heart") || transcript.includes("art")) { 
+            selectDifficulty("hard"); 
+            return true; 
+        }
 
-        if (transcript.includes("start") || transcript.includes("play") || transcript.includes("game")) {
+        if (transcript.includes("start") || transcript.includes("play") || transcript.includes("game") || transcript.includes("begin")) {
             speak("Starting match");
-            setTimeout(startGame, 800);
+            setTimeout(startGame, 600);
             return true;
         }
         return false;
     }
 
+    // --- SEPARATE VOICE CONTROLLERS ---
     function initMenuVoiceCommands() {
-        gameActive = false;
-        isMenuMode = true;
+        console.log("[Engine] Starting Isolated Menu Monitor...");
+        shouldMenuRun = true;
+        shouldBattleRun = false;
         accumulatedSpelling = "";
-        try { recognition.stop(); } catch(e) {}
+
+        try { battleRecognition.stop(); } catch(e) {}
+        try { menuRecognition.stop(); } catch(e) {}
 
         setTimeout(() => {
+            if (!shouldMenuRun) return;
             try {
-                recognition.start();
-                document.getElementById('status').innerText = "🎙️ Menu Mic Connected. Say 'Easy', 'Hard', or 'Start Game'!";
+                menuRecognition.start();
+                document.getElementById('status').innerText = "🎙️ Menu Mic Active! Say: 'Easy', 'Hard', or 'Start Game'";
                 document.getElementById('status').style.color = "#ffeb3b";
-            } catch(e) { console.error("Recognition execution failure:", e); }
-        }, 400);
+            } catch(e) { console.error("Menu engine restart delay:", e); }
+        }, 300);
     }
 
     function startGame() {
+        shouldMenuRun = false;
+        try { menuRecognition.stop(); } catch(e) {}
+
         wordsPool = [...difficultyWords[selectedDifficultySetting]];
         score = 0;
         lives = 3;
         gameOver = false;
         gameActive = true;
-        isMenuMode = false;
         accumulatedSpelling = "";
 
         document.getElementById('score').innerText = score;
@@ -396,7 +423,6 @@
         document.getElementById('menuScreen').classList.add('hidden');
         document.getElementById('gameScreen').classList.remove('hidden');
 
-        recognition.stop();
         setTimeout(nextWord, 500);
         setTimeout(startListening, 2000); 
     }
@@ -404,8 +430,8 @@
     function returnToMenu() {
         stopTimer();
         gameActive = false;
-        isMenuMode = true;
-        recognition.stop();
+        shouldBattleRun = false;
+        try { battleRecognition.stop(); } catch(e) {}
         if (synth.speaking) synth.cancel();
 
         document.getElementById('gameScreen').classList.add('hidden');
@@ -448,7 +474,7 @@
         if (gameOver) return;
         lives--;
         renderHearts();
-        recognition.stop();
+        try { battleRecognition.stop(); } catch(e) {}
 
         if (lives <= 0) {
             triggerGameOver();
@@ -458,7 +484,7 @@
             speak("Time expired!");
             
             setTimeout(nextWord, 3000);
-            setTimeout(startListening, 4500);
+            setTimeout(startListening, 5500);
         }
     }
 
@@ -502,6 +528,8 @@
     function triggerGameOver() {
         gameOver = true;
         stopTimer();
+        shouldBattleRun = false;
+        try { battleRecognition.stop(); } catch(e) {}
         document.getElementById('battleStatus').innerText = "❌ GAME OVER!";
         document.getElementById('spellingDisplay').innerText = "GAME OVER";
         document.getElementById('spellingDisplay').style.color = "#f44336";
@@ -519,60 +547,141 @@
         if (gameOver) return;
         document.getElementById('battleStatus').innerText = "🎙️ Listening Live... Cast spell!";
         accumulatedSpelling = "";
+        shouldBattleRun = true;
         startTimer(); 
-        try { recognition.start(); } catch(err) {}
+        try { battleRecognition.start(); } catch(err) {}
     }
 
-    // --- INTEGRATED VOICE ROUTER ROUTINES ---
-    recognition.onresult = function(event) {
-        let interimTranscript = "";
-        let newlyFinalizedText = "";
+    function clearSpelling() {
+        if (gameOver) return;
+        accumulatedSpelling = "";
+        document.getElementById('spellingDisplay').innerText = "---";
+        document.getElementById('spellingDisplay').style.color = "#00bcd4"; 
+    }
 
-        for (let i = event.resultIndex; i < event.results.length; ++i) {
-            let chunk = event.results[i][0].transcript.toLowerCase();
-            if (event.results[i].isFinal) {
-                newlyFinalizedText += isMenuMode ? chunk : chunk.replace(/[^a-z]/g, "");
-            } else {
-                interimTranscript += isMenuMode ? chunk : chunk.replace(/[^a-z]/g, "");
+    // ================= INSTANCE A: MENU PARSING LOOP =================
+    if (menuRecognition) {
+        menuRecognition.onresult = function(event) {
+            let interimTranscript = "";
+            let newlyFinalizedText = "";
+
+            for (let i = event.resultIndex; i < event.results.length; ++i) {
+                let chunk = event.results[i][0].transcript.toLowerCase();
+                if (event.results[i].isFinal) {
+                    newlyFinalizedText += chunk;
+                } else {
+                    interimTranscript += chunk;
+                }
             }
-        }
-
-        // ================= MENU CONTROL ROUTE =================
-        if (isMenuMode) {
             let fullMenuPhrase = (newlyFinalizedText + interimTranscript).trim();
             if (fullMenuPhrase) {
                 document.getElementById('status').innerText = `🎙️ Heard: "${fullMenuPhrase}"`;
                 handleMenuCommand(fullMenuPhrase);
             }
-            return; 
-        }
+        };
 
-        // ================= ACTIVE BATTLE SPELLING ROUTE =================
-        if (gameOver) return;
+        menuRecognition.onend = function() {
+            if (shouldMenuRun) {
+                setTimeout(() => { try { menuRecognition.start(); } catch(e) {} }, 300);
+            }
+        };
 
-        accumulatedSpelling += newlyFinalizedText;
-        let liveTotalSpelling = accumulatedSpelling + interimTranscript;
-        
-        document.getElementById('spellingDisplay').innerText = liveTotalSpelling.split("").join(" ");
-        let processedTarget = currentWord.replace(/[^a-z]/g, "");
+        menuRecognition.onerror = function(event) {
+            if (event.error !== 'no-speech' && shouldMenuRun) {
+                document.getElementById('status').innerText = `❌ Mic Error: ${event.error}`;
+            }
+        };
+    }
 
-        if (liveTotalSpelling === processedTarget) {
-            score++;
-            stopTimer();
+    // ================= INSTANCE B: BATTLE SPELLING LOOP =================
+    if (battleRecognition) {
+        battleRecognition.onresult = function(event) {
+            if (gameOver || !shouldBattleRun) return;
+
+            let interimTranscript = "";
+            let newlyFinalizedText = "";
+
+            for (let i = event.resultIndex; i < event.results.length; ++i) {
+                let chunk = event.results[i][0].transcript.toLowerCase().replace(/[^a-z]/g, "");
+                if (event.results[i].isFinal) {
+                    newlyFinalizedText += chunk;
+                } else {
+                    interimTranscript += chunk;
+                }
+            }
+
+            accumulatedSpelling += newlyFinalizedText;
+            let liveTotalSpelling = accumulatedSpelling + interimTranscript;
             
-            const sprite = document.getElementById('enemySprite');
-            sprite.classList.add('monster-hit');
-            setTimeout(() => { sprite.classList.remove('monster-hit'); }, 500); 
+            document.getElementById('spellingDisplay').innerText = liveTotalSpelling.split("").join(" ");
+            let processedTarget = currentWord.replace(/[^a-z]/g, "");
 
-            document.getElementById('enemyHealth').style.width = "0%";
-            document.getElementById('score').innerText = score;
-            document.getElementById('battleStatus').innerText = "💥 Critical Hit! Enemy defeated!";
-            document.getElementById('spellingDisplay').style.color = "#4caf50";
-            speak("Cast complete!");
-            
-            wordsPool = wordsPool.filter(w => w !== currentWord);
-            submitScoreToDjango(score);
-            recognition.stop(); 
-            
-            setTimeout(nextWord, 2000);
-            setTimeout(startListening,
+            if (liveTotalSpelling === processedTarget) {
+                score++;
+                stopTimer();
+                shouldBattleRun = false;
+                
+                const sprite = document.getElementById('enemySprite');
+                sprite.classList.add('monster-hit');
+                setTimeout(() => { sprite.classList.remove('monster-hit'); }, 500); 
+
+                document.getElementById('enemyHealth').style.width = "0%";
+                document.getElementById('score').innerText = score;
+                document.getElementById('battleStatus').innerText = "💥 Critical Hit! Enemy defeated!";
+                document.getElementById('spellingDisplay').style.color = "#4caf50";
+                speak("Cast complete!");
+                
+                wordsPool = wordsPool.filter(w => w !== currentWord);
+                submitScoreToDjango(score);
+                try { battleRecognition.stop(); } catch(e) {}
+                
+                setTimeout(nextWord, 2000);
+                setTimeout(startListening, 4500); 
+            }
+            else if (accumulatedSpelling.length >= processedTarget.length && accumulatedSpelling !== processedTarget) {
+                lives--;
+                stopTimer();
+                renderHearts();
+                shouldBattleRun = false;
+                try { battleRecognition.stop(); } catch(e) {}
+
+                const sprite = document.getElementById('enemySprite');
+                sprite.classList.add('monster-strike');
+                setTimeout(() => { sprite.classList.remove('monster-strike'); }, 400);
+
+                if (lives <= 0) {
+                    triggerGameOver();
+                } else {
+                    document.getElementById('battleStatus').innerText = "Wrong spelling! Heart lost.";
+                    document.getElementById('spellingDisplay').style.color = "#f44336"; 
+                    speak("Interrupted.");
+                    
+                    setTimeout(nextWord, 3000);
+                    setTimeout(startListening, 5500);
+                }
+            }
+        };
+
+        battleRecognition.onend = function() {
+            if (shouldBattleRun && !gameOver && timeLeft > 0) {
+                setTimeout(() => { try { battleRecognition.start(); } catch(e) {} }, 300);
+            }
+        };
+    }
+
+    function submitScoreToDjango(currentScore) {
+        fetch('/api/save-score/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: JSON.stringify({ name: '{{ player_name }}', score: currentScore, difficulty: selectedDifficultySetting })
+        })
+        .then(response => response.json())
+        .catch(err => console.error("Scores sync error:", err));
+    }
+</script>
+
+</body>
+</html>
