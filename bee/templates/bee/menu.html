@@ -235,9 +235,9 @@
         <div id="difficultyWrapper" class="hidden">
             <div class="difficulty-section">
                 <div class="difficulty-label">CHOOSE YOUR PATH:</div>
-                <button class="diff-btn" data-diff="easy" onclick="selectDifficulty('easy')">EASY</button>
-                <button class="diff-btn" data-diff="medium" onclick="selectDifficulty('medium')">MEDIUM</button>
-                <button class="diff-btn" data-diff="hard" onclick="selectDifficulty('hard')">HARD</button>
+                <button class="diff-btn" data-diff="easy" onclick="selectDifficulty('easy')">NOVICE</button>
+                <button class="diff-btn" data-diff="medium" onclick="selectDifficulty('medium')">ADEPT</button>
+                <button class="diff-btn" data-diff="hard" onclick="selectDifficulty('hard')">MASTER</button>
             </div>
 
             <div style="margin: 20px 0;">
@@ -381,7 +381,7 @@
         const lore = document.getElementById('loreWrapper');
         if (lore) lore.classList.add('hidden');
         
-        document.getElementById('status').innerText = "🎙️ Ready! Say 'Novice', 'Adept', or 'Master'";
+        document.getElementById('status').innerText = "📖 Get ready! Say 'Novice', 'Adept', or 'Master'";
         speak("Select difficulty level.");
     }
 
