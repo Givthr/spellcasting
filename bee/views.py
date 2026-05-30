@@ -34,16 +34,27 @@ def register_view(request):
 
 @login_required
 def game_view(request):
+    """
+    Acts as the Main Menu View.
+    Renders 'bee/menu.html' containing the video intro and voice setup.
+    """
     nickname = getattr(request.user.playerprofile, 'nickname', request.user.username)
-    return render(request, 'bee/play.html', {'player_name': nickname})
+    return render(request, 'bee/menu.html', {'player_name': nickname})
+
+@login_required
+def game_arena_view(request):
+    """
+    Acts as the Battle Arena View.
+    Renders 'bee/game.html' containing the spelling gameplay loop.
+    """
+    nickname = getattr(request.user.playerprofile, 'nickname', request.user.username)
+    return render(request, 'bee/game.html', {'player_name': nickname})
 
 @login_required
 def leaderboard_view(request):
     from collections import OrderedDict
     panels = OrderedDict()
     for key in ('easy', 'medium', 'hard'):
-        # Optimization: select_related forces Postgres to perform a JOIN operation,
-        # fetching profiles in a single query rather than hitting the database for every single row.
         panels[key] = list(
             PlayerScore.objects.filter(difficulty=key)
             .select_related('user__playerprofile')
@@ -56,7 +67,6 @@ def my_scores_view(request):
     nickname = getattr(request.user.playerprofile, 'nickname', request.user.username)
     diffs = []
     for key, label in [('easy', 'Easy'), ('medium', 'Medium'), ('hard', 'Hard')]:
-        # Cleanly look up the specific row bound to this user session
         entry = PlayerScore.objects.filter(user=request.user, difficulty=key).first()
         diffs.append({'key': key, 'label': label, 'entry': entry})
         
@@ -68,7 +78,6 @@ def my_scores_view(request):
 def save_score(request):
     if request.method == 'POST':
         try:
-            # Check session middleware directly—no trusting client strings
             if not request.user.is_authenticated:
                 return JsonResponse({'status': 'error', 'message': 'Unauthorized account.'}, status=401)
 
