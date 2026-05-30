@@ -381,11 +381,14 @@
 
 <body>
 
+{% csrf_token %}
+
 <canvas id="stars"></canvas>
 
 <div id="introOverlay">
-    <video id="introVideo" autoplay muted playsinline>
+    <video id="introVideo" autoplay muted playsinline preload="auto">
         <source src="{% static 'bee/intro.mp4' %}" type="video/mp4">
+        Your browser does not support the video tag.
     </video>
     <button class="skip-intro-btn" onclick="endIntroSequence()">SKIP INTRO</button>
 </div>
@@ -396,7 +399,6 @@
         <h1>SPELLCASTING</h1>
         <p class="menu-subtitle">A Voice-Controlled Spelling Adventure</p>
 
-        <!-- IMMERSIVE INTRODUCTION BLOCK -->
         <div class="lore-container">
             <p class="lore-text">
                 The ancient layout chambers of the Arena have broken open. Vile monsters and aberrant phantoms are ascending from the dark. Your sword cannot pierce them, and your armor cannot hold them back. Your only salvation lies in the old magic.
@@ -449,7 +451,6 @@
             <div class="stat-badge hearts-box" id="heartsDisplay">❤️ ❤️ ❤️</div>
         </div>
 
-        <!-- BATTLE ENCOUNTER VIEWPORT AREA -->
         <div class="battle-arena">
             <div id="enemyName" class="enemy-name">MINION</div>
             <div class="health-bar-container">
@@ -505,7 +506,7 @@
     })();
 
     /* ==========================================================================
-       INTRO VIDEO CONTEXT MANAGERS
+       INTRO VIDEO CONTEXT MANAGERS & FAILSAFES
        ========================================================================== */
     const video = document.getElementById('introVideo');
     
@@ -513,7 +514,23 @@
         if(video) video.muted = false;
     }, { once: true });
 
-    video.onended = () => endIntroSequence();
+    if (video) {
+        video.onended = () => endIntroSequence();
+        
+        // Handles 404 or WhiteNoise asset compression/streaming failure gracefully
+        video.onerror = () => {
+            console.warn("Intro video asset failed to load or stream. Skipping to main app.");
+            endIntroSequence();
+        };
+
+        // Forced engine trigger to counter browser asset blocks
+        let playPromise = video.play();
+        if (playPromise !== undefined) {
+            playPromise.catch(error => {
+                console.log("Autoplay halted by engine constraints. UI interaction requested.");
+            });
+        }
+    }
 
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.get('skip_intro') === 'true') {
@@ -527,7 +544,7 @@
     function endIntroSequence() {
         const overlay = document.getElementById('introOverlay');
         if (overlay && !overlay.classList.contains('hidden')) {
-            video.pause();
+            if (video) try { video.pause(); } catch(e) {}
             overlay.style.opacity = '0';
             setTimeout(() => overlay.classList.add('hidden'), 800);
         }
@@ -538,7 +555,6 @@
        ========================================================================== */
     const difficultyWords = {
         easy: [
-            // 3-5 Letters: Quick elemental casts, brutal strikes, and raw damage
             "fire", "ice", "hex", "cast", "zap", "bolt", "burn", "slam", "whip", "jab",
             "stun", "daze", "flame", "boil", "arc", "ray", "smite", "slash", "stab", "shock",
             "hurl", "lash", "blast", "chop", "melt", "bite", "claw", "hack", "tear", "rend",
@@ -551,7 +567,6 @@
             "chomp", "stomp", "punch", "drown", "choke", "bleed", "rot", "rust", "decay", "char"
         ],
         medium: [
-            // 6-8 Letters: Devastating magic, targeted assassinations, and fatal forces
             "punish", "pummel", "cleave", "pierce", "ignite", "freeze", "shatter", "thunder", "poison", "scorch",
             "destroy", "batter", "cripple", "sunder", "impale", "skewer", "kindle", "blister", "shadow", "nether",
             "arcane", "mystic", "astral", "cosmic", "radiant", "divine", "devour", "consume", "immolate", "deluge",
@@ -564,7 +579,6 @@
             "sinkhole", "firefall", "sunbeam", "moonbeam", "starfall", "darkstar", "firebolt", "icestorm", "sunburst", "moonfall"
         ],
         hard: [
-            // 9+ Letters: World-ending incantations, execution methods, and catastrophic elements
             "conflagration", "obliteration", "devastation", "annihilation", "electrocution", "asphyxiation", "strangulation", "decapitation", "disintegration", "cataclysm",
             "apocalypse", "armageddon", "maelstrom", "singularity", "hemorrhage", "laceration", "mutilation", "evisceration", "excruciation", "sacrifice",
             "eradication", "extermination", "assassination", "incineration", "vivisection", "immolation", "exsanguinate", "pulverization", "liquefaction", "electrocute",
@@ -809,7 +823,6 @@
             if (timeLeft <= 0) {
                 stopTimer();
                 safelyStopRecognition();
-                // THEMATIC TIMEOUT
                 handleIncorrectTransition("The spell fizzled!");
             }
         }, 1000);
@@ -824,7 +837,6 @@
         stopTimer();
         safelyStopRecognition();
         setInterfaceDisabled(true);
-        // THEMATIC DEFEAT
         document.getElementById('status').innerText = "💀 YOU HAVE FALLEN";
         document.getElementById('status').style.color = "var(--danger)";
         document.getElementById('spellingDisplay').innerText = "VITALITY DEPLETED";
@@ -943,13 +955,25 @@
         };
     }
 
+    /* ==========================================================================
+       PRODUCTION CSRF-SECURE SCORE SUBMISSION API REQUEST
+       ========================================================================== */
     function submitScoreToDjango(currentScore) {
         const currentDifficulty = typeof selectedDifficultySetting !== 'undefined' ? selectedDifficultySetting : 'easy';
+        
+        // Dynamic search retrieval for Django context security tokens
+        const csrfEl = document.querySelector('[name=csrfmiddlewaretoken]');
+        if (!csrfEl) {
+            console.error("Security Halt: CSRF element token verification missing from current DOM context.");
+            return;
+        }
+        const csrftoken = csrfEl.value;
 
         fetch('/api/save-score/', {
             method: 'POST',
             headers: { 
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrftoken 
             },
             body: JSON.stringify({
                 score: currentScore,            
