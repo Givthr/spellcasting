@@ -289,7 +289,7 @@
     })();
 
     /* ==========================================================================
-       GAME STATE & LEXICONS
+       GAME STATE & DICTIONARIES
        ========================================================================== */
     const difficultyWords = {
         easy: [
@@ -581,18 +581,20 @@
 
             for (let i = 0; i < event.results.length; i++) {
                 let chunk = event.results[i][0].transcript.toLowerCase().trim();
-                let spokenParts = chunk.replace(/[^a-zA-Z ]/g, "").split(/\s+/);
+                let spokenParts = chunk.replace(/[^a-zA-Z -]/g, "").split(/[\s-]+/);
 
                 spokenParts.forEach(part => {
                     if (!part) return;
+                    
                     if (validLetters[part]) {
                         liveTotalSpelling += validLetters[part];
                     } else if (wordToLetterMap[part]) {
                         liveTotalSpelling += wordToLetterMap[part];
                     } else {
-                        // Fallback processing for direct letter capture structures
-                        for (let char of part) {
-                            if (char >= 'a' && char <= 'z') liveTotalSpelling += char;
+                        // STRICT LETTER VERIFICATION RULE
+                        // Discards spoken multi-character full cheat words instantly
+                        if (part.length === 1 && part >= 'a' && part <= 'z') {
+                            liveTotalSpelling += part;
                         }
                     }
                 });
@@ -630,7 +632,7 @@
                 speak("A fatal blow!", () => {
                     setTimeout(nextWord, 1200);
                 });
-                return; // Early terminal exit
+                return; 
             }
             
             // EXCEEDED LENGTH FAILURE GATECHECK
