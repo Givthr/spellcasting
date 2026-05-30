@@ -1,9 +1,10 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Spellcasting Battle</title>
+    <title>Spellcasting Battle Arena</title>
     <style>
         body {
             background-color: #282c34;
@@ -17,6 +18,8 @@
             margin: 0;
             overflow: hidden;
         }
+
+        /* ==================== CORE GAME UI COMPONENTS ==================== */
         .container {
             text-align: center;
             background-color: #1e222b;
@@ -26,6 +29,7 @@
             max-width: 600px;
             width: 90%;
         }
+
         .battle-arena {
             margin: 20px auto;
             display: flex;
@@ -61,7 +65,9 @@
             letter-spacing: 1px;
             margin-bottom: 5px;
         }
+
         h1 { color: #b68f40; font-size: 2.5rem; margin-bottom: 10px; }
+
         .stats-row {
             display: flex;
             justify-content: space-around;
@@ -72,7 +78,8 @@
         .score-box { color: #4caf50; font-size: 1.5rem; font-weight: bold; }
         .timer-box { color: #e53935; font-size: 1.6rem; font-weight: bold; background: #2c1e21; padding: 5px 15px; border-radius: 6px; border: 1px solid #7a2022; }
         .hearts-box { font-size: 1.8rem; color: #f44336; letter-spacing: 5px; }
-        .status-box { color: #ffeb3b; font-size: 1.2rem; min-height: 40px; margin-bottom: 20px; font-weight: bold; }
+        .status-box { color: #ffeb3b; font-size: 1.2rem; min-height: 30px; margin-bottom: 20px; }
+        
         .spelling-display {
             font-size: 3rem;
             letter-spacing: 8px;
@@ -95,8 +102,11 @@
             font-weight: bold;
         }
         button.action-btn:hover { background-color: #45a049; transform: scale(1.02); }
+        button.action-btn:active { transform: scale(0.98); }
         button:disabled { background-color: #555 !important; cursor: not-allowed; transform: none !important; }
+        .hidden { display: none !important; }
 
+        /* ==================== BATTLE ANIMATIONS ==================== */
         @keyframes monsterDamage {
             0% { transform: scale(1) translateX(0); filter: brightness(1) drop-shadow(0 0 0 rgba(255,0,0,0)); }
             15% { transform: scale(1.3) translateX(-10px); filter: brightness(5) drop-shadow(0 0 15px #ff3333); }
@@ -106,6 +116,7 @@
             80% { transform: scale(1.1) translateX(-4px); filter: brightness(1.5); }
             100% { transform: scale(1) translateX(0); filter: brightness(1) drop-shadow(0 0 0 rgba(0,0,0,0)); }
         }
+
         @keyframes monsterAttack {
             0% { transform: translateY(0) scale(1); filter: sepia(0); }
             20% { transform: translateY(15px) scale(0.9); filter: sepia(1) hue-rotate(-50deg) saturate(5); } 
@@ -114,6 +125,7 @@
             80% { transform: translateY(-5px); }
             100% { transform: translateY(0); }
         }
+
         .monster-hit { animation: monsterDamage 0.5s ease-in-out forwards; }
         .monster-strike { animation: monsterAttack 0.4s ease-in-out forwards; }
     </style>
@@ -143,7 +155,7 @@
             <div id="targetSpellDisplay" style="font-size: 2.2rem; color: #ffeb3b; font-weight: bold; text-transform: uppercase; margin-top: 5px; letter-spacing: 1px;">---</div>
         </div>
 
-        <div id="battleStatus" class="status-box">Preparing spell...</div>
+        <div id="status" class="status-box">Preparing spell...</div>
         <div id="spellingDisplay" class="spelling-display">---</div>
 
         <button class="action-btn" style="background-color: #9c27b0;" id="repeatBtn" onclick="repeatWord()">HOW DO I CAST IT?</button>
@@ -155,6 +167,7 @@
 </div>
 
 <script>
+    // --- GAME ENGINE STATE ---
     const difficultyWords = {
         easy: ["lumos", "nox", "incendio", "protego", "silencio", "reducto", "accio", "diffindo", "aguamenti", "evanesco", "imperio", "revelio", "tergeo", "finite", "relashio", "alohomora", "morsmordre", "avis", "crucio", "enervate"],
         medium: ["expecto patronum", "sectumsempra", "expelliarmus", "wingardium leviosa", "arresto momentum", "petrificus totalus", "riddikulus", "confundo", "avada kedavra", "priori incantatem", "legilimens", "obliviate", "cave inimicum", "vade retro", "ignis fatuus", "corpus inane", "magna veritas", "aqua eructo", "salvio hexia", "exura vita"],
@@ -164,69 +177,70 @@
     const monsterNames = ["Shadow Demon", "Wraith", "Abyssal Ghoul", "Banshee", "Undead Skeleton", "Poltergeist"];
     const monsterSprites = ["👿", "👻", "👹", "💀", "🧛", "🧟"];
 
-    // Read chosen settings out from parameters passed down across paths
+    // Safely retrieve URL parameters or default to easy
     const urlParams = new URLSearchParams(window.location.search);
-    let selectedDifficultySetting = urlParams.get('difficulty') || 'easy';
+    let selectedDifficultySetting = urlParams.get('difficulty') || "easy";
 
     let wordsPool = [];
     let currentWord = "";
-    let accumulatedSpelling = ""; 
+    let finalSpelling = "";
     let score = 0;
     let lives = 3;
     let gameOver = false;
     let timeLeft = 15;
     let countdownInterval = null;
-    let shouldBattleRun = false;
 
     const synth = window.speechSynthesis;
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    let battleRecognition = null;
+    const recognition = new SpeechRecognition();
+    
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    recognition.lang = 'en-US';
 
-    if (SpeechRecognition) {
-        battleRecognition = new SpeechRecognition();
-        battleRecognition.continuous = true;
-        battleRecognition.interimResults = true;
-        battleRecognition.lang = 'en-US';
-    }
-
-    // Auto-ignition trigger run sequence inside the gameplay arena boundaries instantly 
-    window.onload = function() {
+    // Auto-init game on DOM load
+    window.addEventListener('DOMContentLoaded', () => {
         startGame();
-    };
+    });
 
     function startGame() {
         wordsPool = [...difficultyWords[selectedDifficultySetting]];
         score = 0;
         lives = 3;
         gameOver = false;
-        accumulatedSpelling = "";
+        finalSpelling = "";
 
         document.getElementById('score').innerText = score;
         renderHearts();
         
+        document.getElementById('repeatBtn').disabled = false;
+        document.getElementById('clearBtn').disabled = false;
+        document.getElementById('skipBtn').disabled = false;
+
         setTimeout(nextWord, 500);
         setTimeout(startListening, 2000); 
     }
 
     function returnToMenu() {
         stopTimer();
-        shouldBattleRun = false;
-        try { battleRecognition.stop(); } catch(e) {}
+        recognition.stop();
         if (synth.speaking) synth.cancel();
-        // Return browser back tracking to your menu endpoint path base
+        // Redirect back to main menu layout view
         window.location.href = '/'; 
     }
 
     function speak(text) {
         if (synth.speaking) synth.cancel();
         const utterance = new SpeechSynthesisUtterance(text);
-        utterance.rate = 0.95;
+        utterance.rate = 0.9;
         synth.speak(utterance);
     }
 
     function renderHearts() {
         let heartsStr = "";
-        for (let i = 0; i < 3; i++) { heartsStr += (i < lives) ? "❤️ " : "🖤 "; }
+        for (let i = 0; i < 3; i++) {
+            heartsStr += (i < lives) ? "❤️ " : "🖤 "; 
+        }
         document.getElementById('heartsDisplay').innerText = heartsStr;
     }
 
@@ -238,6 +252,7 @@
         countdownInterval = setInterval(() => {
             timeLeft--;
             document.getElementById('timerDisplay').innerText = timeLeft;
+            
             if (timeLeft <= 0) {
                 stopTimer();
                 handleTimeOut();
@@ -245,22 +260,24 @@
         }, 1000);
     }
 
-    function stopTimer() { if (countdownInterval) clearInterval(countdownInterval); }
+    function stopTimer() {
+        if (countdownInterval) clearInterval(countdownInterval);
+    }
 
     function handleTimeOut() {
         if (gameOver) return;
         lives--;
         renderHearts();
-        try { battleRecognition.stop(); } catch(e) {}
+        recognition.stop();
 
         if (lives <= 0) {
             triggerGameOver();
         } else {
-            document.getElementById('battleStatus').innerText = "⏰ TIME OUT! Heart lost.";
+            document.getElementById('status').innerText = "⏰ TIME OUT! Heart lost. Loading next word.";
             document.getElementById('spellingDisplay').style.color = "#f44336";
-            speak("Time expired!");
+            speak("Time is up! You lost a heart. Moving to the next word.");
             
-            setTimeout(nextWord, 3000);
+            setTimeout(nextWord, 5000);
             setTimeout(startListening, 5500);
         }
     }
@@ -271,47 +288,47 @@
         if (wordsPool.length === 0) {
             gameOver = true;
             stopTimer();
-            document.getElementById('battleStatus').innerText = "🏆 VICTORY! All targets defeated!";
+            document.getElementById('status').innerText = "🏆 VICTORY! You have cleared the dungeon!";
             document.getElementById('targetSpellDisplay').innerText = "CLEAR";
             document.getElementById('spellingDisplay').innerText = "VICTORY";
             document.getElementById('spellingDisplay').style.color = "#4caf50";
             disableButtons();
-            speak("Dungeon complete.");
+            speak("Congratulations! You have successfully defeated all enemies in this area!");
             return;
         }
 
         document.getElementById('enemyHealth').style.width = "100%";
+
         const randomMonsterIdx = Math.floor(Math.random() * monsterSprites.length);
         document.getElementById('enemyName').innerText = monsterNames[randomMonsterIdx].toUpperCase();
         document.getElementById('enemySprite').innerText = monsterSprites[randomMonsterIdx];
 
         const randomIndex = Math.floor(Math.random() * wordsPool.length);
         currentWord = wordsPool[randomIndex];
-        accumulatedSpelling = "";
+        finalSpelling = "";
         
         document.getElementById('targetSpellDisplay').innerText = currentWord;
         document.getElementById('spellingDisplay').innerText = "---";
-        document.getElementById('battleStatus').innerText = "An enemy approaches! Cast your spell.";
+        document.getElementById('status').innerText = "An enemy approaches! Prepare your spell...";
         document.getElementById('spellingDisplay').style.color = "#00bcd4"; 
         
-        speak("Spell sequence " + currentWord);
+        speak("Cast your spell!");
     }
 
     function repeatWord() {
         if (gameOver) return;
-        speak("Spell target sequence " + currentWord);
+        document.getElementById('status').innerText = "Ready to receive incantation...";
+        speak("Read the scroll!");
     }
 
     function triggerGameOver() {
         gameOver = true;
         stopTimer();
-        shouldBattleRun = false;
-        try { battleRecognition.stop(); } catch(e) {}
-        document.getElementById('battleStatus').innerText = "❌ GAME OVER!";
+        document.getElementById('status').innerText = "❌ GAME OVER! You ran out of hearts.";
         document.getElementById('spellingDisplay').innerText = "GAME OVER";
         document.getElementById('spellingDisplay').style.color = "#f44336";
         disableButtons();
-        speak("Defeated.");
+        speak("Game over. Systems powering down.");
     }
 
     function disableButtons() { 
@@ -320,93 +337,102 @@
         document.getElementById('skipBtn').disabled = true;
     }
 
-    // Modified this logic so the system automatically clears the display on every new spell attempt
     function startListening() {
         if (gameOver) return;
-        document.getElementById('battleStatus').innerText = "🎙️ Listening Live... Cast spell!";
-        clearSpelling(); // Automatically flushes input boxes clean when a new word activates
-        shouldBattleRun = true;
+        
+        document.getElementById('status').innerText = "Listening live... Speak the incantation!";
+        finalSpelling = "";
+        
         startTimer(); 
-        try { battleRecognition.start(); } catch(err) {}
+        
+        try {
+            recognition.start();
+        } catch(err) {
+            console.log("Microphone is already active.");
+        }
     }
 
     function clearSpelling() {
-        accumulatedSpelling = "";
+        if (gameOver) return;
+        finalSpelling = "";
         document.getElementById('spellingDisplay').innerText = "---";
         document.getElementById('spellingDisplay').style.color = "#00bcd4"; 
+        document.getElementById('status').innerText = "Input cleared! Speak clearly now.";
     }
 
-    if (battleRecognition) {
-        battleRecognition.onresult = function(event) {
-            if (gameOver || !shouldBattleRun) return;
+    // --- AUDIO VALIDATION ENGINE ---
+    recognition.onresult = function(event) {
+        if (gameOver) return;
+        let interimTranscript = "";
 
-            let interimTranscript = "";
-            let newlyFinalizedText = "";
+        for (let i = event.resultIndex; i < event.results.length; ++i) {
+            let transcriptChunk = event.results[i][0].transcript.toLowerCase();
+            let cleanChunk = transcriptChunk.replace(/[^a-z]/g, "");
 
-            for (let i = event.resultIndex; i < event.results.length; ++i) {
-                let chunk = event.results[i][0].transcript.toLowerCase().replace(/[^a-z]/g, "");
-                if (event.results[i].isFinal) newlyFinalizedText += chunk;
-                else interimTranscript += chunk;
+            if (event.results[i].isFinal) {
+                finalSpelling += cleanChunk;
+            } else {
+                interimTranscript = cleanChunk;
             }
+        }
 
-            accumulatedSpelling += newlyFinalizedText;
-            let liveTotalSpelling = accumulatedSpelling + interimTranscript;
+        let liveTotalSpelling = finalSpelling + interimTranscript;
+        document.getElementById('spellingDisplay').innerText = liveTotalSpelling.split("").join(" ");
+
+        if (liveTotalSpelling === currentWord) {
+            score++;
+            stopTimer();
             
-            document.getElementById('spellingDisplay').innerText = liveTotalSpelling.split("").join(" ");
-            let processedTarget = currentWord.replace(/[^a-z]/g, "");
+            const sprite = document.getElementById('enemySprite');
+            sprite.classList.add('monster-hit');
+            setTimeout(() => {
+                sprite.classList.remove('monster-hit');
+            }, 500); 
 
-            if (liveTotalSpelling === processedTarget) {
-                score++;
-                stopTimer();
-                shouldBattleRun = false;
+            document.getElementById('enemyHealth').style.width = "0%";
+            
+            document.getElementById('score').innerText = score;
+            document.getElementById('status').innerText = "💥 Critical Hit! Enemy defeated!";
+            document.getElementById('spellingDisplay').style.color = "#4caf50";
+            speak("Target destroyed!");
+            
+            wordsPool = wordsPool.filter(w => w !== currentWord);
+            
+            submitScoreToDjango(score);
+            recognition.stop(); 
+            setTimeout(nextWord, 2000);
+            setTimeout(startListening, 4500); 
+        }
+        else if (liveTotalSpelling.length >= currentWord.length && liveTotalSpelling !== currentWord) {
+            lives--;
+            stopTimer();
+            renderHearts();
+            recognition.stop();
+
+            const sprite = document.getElementById('enemySprite');
+            sprite.classList.add('monster-strike');
+            setTimeout(() => {
+                sprite.classList.remove('monster-strike');
+            }, 400);
+
+            if (lives <= 0) {
+                triggerGameOver();
+            } else {
+                document.getElementById('status').innerText = "Wrong spelling! Heart lost. Trying next word.";
+                document.getElementById('spellingDisplay').style.color = "#f44336"; 
+                speak("Not quite. You lost a heart. The correct spelling was " + currentWord.split("").join(" "));
                 
-                const sprite = document.getElementById('enemySprite');
-                sprite.classList.add('monster-hit');
-                setTimeout(() => { sprite.classList.remove('monster-hit'); }, 500); 
-
-                document.getElementById('enemyHealth').style.width = "0%";
-                document.getElementById('score').innerText = score;
-                document.getElementById('battleStatus').innerText = "💥 Critical Hit! Enemy defeated!";
-                document.getElementById('spellingDisplay').style.color = "#4caf50";
-                speak("Cast complete!");
-                
-                wordsPool = wordsPool.filter(w => w !== currentWord);
-                submitScoreToDjango(score);
-                try { battleRecognition.stop(); } catch(e) {}
-                
-                setTimeout(nextWord, 2000);
-                setTimeout(startListening, 4500); 
+                setTimeout(nextWord, 5000);
+                setTimeout(startListening, 6500);
             }
-            else if (accumulatedSpelling.length >= processedTarget.length && accumulatedSpelling !== processedTarget) {
-                lives--;
-                stopTimer();
-                renderHearts();
-                shouldBattleRun = false;
-                try { battleRecognition.stop(); } catch(e) {}
+        }
+    };
 
-                const sprite = document.getElementById('enemySprite');
-                sprite.classList.add('monster-strike');
-                setTimeout(() => { sprite.classList.remove('monster-strike'); }, 400);
-
-                if (lives <= 0) {
-                    triggerGameOver();
-                } else {
-                    document.getElementById('battleStatus').innerText = "Wrong spelling! Heart lost.";
-                    document.getElementById('spellingDisplay').style.color = "#f44336"; 
-                    speak("Interrupted.");
-                    
-                    setTimeout(nextWord, 3000);
-                    setTimeout(startListening, 5500);
-                }
-            }
-        };
-
-        battleRecognition.onend = function() {
-            if (shouldBattleRun && !gameOver && timeLeft > 0) {
-                setTimeout(() => { try { battleRecognition.start(); } catch(e) {} }, 300);
-            }
-        };
-    }
+    recognition.onend = function() {
+        if (!gameOver) {
+            console.log("Microphone paused.");
+        }
+    };
 
     function submitScoreToDjango(currentScore) {
         fetch('/api/save-score/', {
@@ -418,8 +444,10 @@
             body: JSON.stringify({ name: '{{ player_name }}', score: currentScore, difficulty: selectedDifficultySetting })
         })
         .then(response => response.json())
-        .catch(err => console.error("Scores sync error:", err));
+        .then(data => console.log("Score logged:", data))
+        .catch(err => console.error("Database connection failed:", err));
     }
 </script>
+
 </body>
 </html>
