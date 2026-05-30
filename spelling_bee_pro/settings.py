@@ -91,9 +91,12 @@ TIME_ZONE = "UTC"
 USE_I18N = True
 USE_TZ = True
 
-# --- FIX: Consolidated static definitions to clean Path syntax ---
+# --- STATIC CONFIGURATION FOR PRODUCTION ---
 STATIC_URL = "static/"
-STATICFILES_DIRS = [BASE_DIR / 'static']
+
+# Ensure this folder physically exists at your project root if used, otherwise remove this line!
+STATICFILES_DIRS = [BASE_DIR / 'static'] 
+
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
@@ -101,9 +104,9 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 LOGIN_URL = '/login/'
 LOGIN_REDIRECT_URL = '/'
 
-# --- FIX: Crucial CSRF and Security Settings for Production Environments ---
+# --- CSRF and Security Settings for Production Environments ---
 if not DEBUG:
-    # 1. Map trusted origins out of an environment variable string (e.g., "https://my-bee-app.com,https://staging.app")
+    # 1. Map trusted origins out of an environment variable string
     csrf_origins = os.environ.get("CSRF_TRUSTED_ORIGINS", "")
     if csrf_origins:
         CSRF_TRUSTED_ORIGINS = csrf_origins.split(",")
@@ -112,3 +115,11 @@ if not DEBUG:
     SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
+
+# --- WHITENOISE VIDEO STREAM FIXES FOR RAILWAY ---
+WHITENOISE_MIME_TYPES = {
+    '.mp4': 'video/mp4'
+}
+
+# Stop WhiteNoise from compressing video files into broken gzip targets
+WHITENOISE_SKIP_COMPRESS_EXTENSIONS = ('jpg', 'jpeg', 'png', 'gif', 'webp', 'mp4', 'mp3', 'wav')
