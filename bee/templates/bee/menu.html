@@ -458,16 +458,15 @@
         setTimeout(() => {
             if (!shouldMenuRun) return;
             try {
-                menuRecognition.start();
                 if(!isGameInitiated) {
                     const line1 = "I am the Talking Tome, a tome automaton - an automatome!";
                     const line2 = "A magical auditory and verbal connection between us has been established. Are you ready to enter the Arena? Say 'Start'";            
                     document.getElementById('status').innerHTML = "📖 " + line1 + "<br>" + line2;
                     speak(line1 + " " + line2);
-                }
                 } else {
                     document.getElementById('status').innerText = "🎙️ Choice Active! Say 'Novice', 'Adept', or 'Master'";
                 }
+                
                 document.getElementById('status').style.color = "#ffeb3b";
 
                 if (!isGameInitiated) {
