@@ -1,0 +1,278 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spellcasting - Main Menu</title>
+    <style>
+        body {
+            background-color: #282c34;
+            color: white;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden;
+        }
+        #introOverlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: black;
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: opacity 1s ease-out, visibility 1s;
+        }
+        #introVideo {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .skip-intro-btn {
+            position: absolute;
+            bottom: 30px;
+            right: 30px;
+            background-color: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            padding: 8px 16px;
+            font-size: 0.9rem;
+            color: white;
+            border-radius: 4px;
+            cursor: pointer;
+            z-index: 10000;
+        }
+        .skip-intro-btn:hover { background-color: rgba(255, 255, 255, 0.4); }
+        .container {
+            text-align: center;
+            background-color: #1e222b;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            max-width: 600px;
+            width: 90%;
+        }
+        h1 { color: #b68f40; font-size: 2.5rem; margin-bottom: 10px; }
+        .menu-subtitle { color: #aaa; font-size: 1.2rem; margin-bottom: 30px; }
+        .difficulty-section { margin: 25px 0; }
+        .difficulty-label { font-size: 1.1rem; color: #eee; margin-bottom: 10px; font-weight: bold; }
+        .diff-btn {
+            background-color: #3a3f4d;
+            color: #ccc;
+            padding: 10px 20px;
+            font-size: 1rem;
+            border: 2px solid transparent;
+            border-radius: 6px;
+            cursor: pointer;
+            margin: 5px;
+            transition: all 0.2s;
+        }
+        .diff-btn:hover { background-color: #4e5465; color: white; }
+        .diff-btn.selected[data-diff="easy"] { background-color: #4caf50; color: white; border-color: #81c784; }
+        .diff-btn.selected[data-diff="medium"] { background-color: #ff9800; color: white; border-color: #ffb74d; }
+        .diff-btn.selected[data-diff="hard"] { background-color: #e53935; color: white; border-color: #ef5350; }
+        .status-box { color: #ffeb3b; font-size: 1.2rem; min-height: 40px; margin-bottom: 20px; font-weight: bold; }
+        button.action-btn {
+            background-color: #4caf50;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 1.2rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.1s;
+            margin: 10px;
+            font-weight: bold;
+        }
+        button.action-btn:hover { background-color: #45a049; transform: scale(1.02); }
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+
+<div id="introOverlay">
+    <video id="introVideo" autoplay muted playsinline>
+        <source src="{% static 'bee/intro.mp4' %}" type="video/mp4">
+        Your browser does not support the video tag.
+    </video>
+    <button class="skip-intro-btn" onclick="endIntroSequence()">SKIP INTRO</button>
+</div>
+
+<div class="container">
+    <div id="menuScreen">
+        <h1>SPELLCASTING</h1>
+        <p class="menu-subtitle">A Voice-Controlled Spelling Adventure</p>
+        
+        <div class="difficulty-section">
+            <div class="difficulty-label">CHOOSE DIFFICULTY:</div>
+            <button class="diff-btn selected" data-diff="easy" onclick="selectDifficulty('easy')">EASY</button>
+            <button class="diff-btn" data-diff="medium" onclick="selectDifficulty('medium')">MEDIUM</button>
+            <button class="diff-btn" data-diff="hard" onclick="selectDifficulty('hard')">HARD</button>
+        </div>
+
+        <div style="margin: 20px 0;">
+            <p style="color: #aaa; font-size: 1rem; line-height: 1.6;">
+                <strong>Rules:</strong> Listen to the AI speak a word, then spell it out loud letter-by-letter. You have 3 hearts, 15 seconds per word, and you can repeat the audio clue at any time!
+            </p>
+        </div>
+
+        <div id="status" class="status-box">Waiting for user gesture...</div>
+
+        <button class="action-btn" style="background-color: #b68f40; font-size: 1.5rem; padding: 15px 30px;" onclick="startGame()">
+            START GAME
+        </button>
+        <button class="action-btn" style="background-color: #3a3f4d; color: #ccc;" onclick="window.location.href='/my-scores/'">
+            MY SCORES 📊
+        </button>
+        <button class="action-btn" style="background-color: #3a3f4d; color: #ccc;" onclick="window.location.href='/leaderboard/'">
+            LEADERBOARD 🏆
+        </button>
+
+        <p style="color:#4caf50; margin-top:15px; font-weight: bold; line-height: 1.5; font-size: 0.95rem;">
+            🎤 Menu Voice Commands:
+            <br>
+            <span style="color: #aaa; font-weight: normal;">Say: "Easy", "Medium", "Hard", or "Start Game"</span>
+        </p>
+    </div>
+</div>
+
+<script>
+    const video = document.getElementById('introVideo');
+    let selectedDifficultySetting = "easy";
+    let shouldMenuRun = false;
+    
+    const synth = window.speechSynthesis;
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    let menuRecognition = null;
+
+    if (SpeechRecognition) {
+        menuRecognition = new SpeechRecognition();
+        menuRecognition.continuous = true;
+        menuRecognition.interimResults = true;
+        menuRecognition.lang = 'en-US';
+    } else {
+        alert("Web Speech API recognition is unavailable. Please run on Google Chrome or Edge.");
+    }
+
+    document.body.addEventListener('click', function() {
+        if (video) { video.muted = false; }
+    }, { once: true });
+    
+    video.onended = function() { endIntroSequence(); };
+
+    function endIntroSequence() {
+        const overlay = document.getElementById('introOverlay');
+        overlay.style.opacity = '0';
+        
+        navigator.mediaDevices.getUserMedia({ audio: true })
+            .then(function(stream) {
+                console.log("[System] Microphone authorized.");
+                stream.getTracks().forEach(track => track.stop());
+                
+                setTimeout(() => {
+                    overlay.classList.add('hidden');
+                    initMenuVoiceCommands(); 
+                }, 400);
+            })
+            .catch(function(err) {
+                console.error("[System] Microphone permission denied:", err);
+                overlay.classList.add('hidden');
+                document.getElementById('status').innerText = "❌ Microphone Blocked! Check settings.";
+                document.getElementById('status').style.color = "#f44336";
+            });
+    }
+
+    function speak(text) {
+        if (synth.speaking) synth.cancel();
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.rate = 0.95;
+        synth.speak(utterance);
+    }
+
+    function selectDifficulty(level) {
+        selectedDifficultySetting = level;
+        document.querySelectorAll('.diff-btn').forEach(btn => {
+            if (btn.getAttribute('data-diff') === level) {
+                btn.classList.add('selected');
+            } else {
+                btn.classList.remove('selected');
+            }
+        });
+        speak(`Difficulty set to ${level}`);
+    }
+
+    function handleMenuCommand(transcript) {
+        transcript = transcript.toLowerCase().trim();
+        if (transcript.includes("easy") || transcript.includes("is he") || transcript.includes("eezi")) { 
+            selectDifficulty("easy"); 
+            return true; 
+        }
+        if (transcript.includes("medium") || transcript.includes("normal") || transcript.includes("mid")) { 
+            selectDifficulty("medium"); 
+            return true; 
+        }
+        if (transcript.includes("hard") || transcript.includes("heart") || transcript.includes("art")) { 
+            selectDifficulty("hard"); 
+            return true; 
+        }
+        if (transcript.includes("start") || transcript.includes("play") || transcript.includes("game") || transcript.includes("begin")) {
+            speak("Starting match");
+            setTimeout(startGame, 600);
+            return true;
+        }
+        return false;
+    }
+
+    function initMenuVoiceCommands() {
+        shouldMenuRun = true;
+        try { menuRecognition.stop(); } catch(e) {}
+
+        setTimeout(() => {
+            if (!shouldMenuRun) return;
+            try {
+                menuRecognition.start();
+                document.getElementById('status').innerText = "🎙️ Menu Mic Active! Say: 'Easy', 'Hard', or 'Start Game'";
+                document.getElementById('status').style.color = "#ffeb3b";
+            } catch(e) { console.error("Menu engine restart delay:", e); }
+        }, 300);
+    }
+
+    function startGame() {
+        shouldMenuRun = false;
+        try { menuRecognition.stop(); } catch(e) {}
+        // Route directly to your game template path, adding the difficulty parameter
+        window.location.href = `/game/?difficulty=${selectedDifficultySetting}`;
+    }
+
+    if (menuRecognition) {
+        menuRecognition.onresult = function(event) {
+            let interimTranscript = "";
+            let newlyFinalizedText = "";
+            for (let i = event.resultIndex; i < event.results.length; ++i) {
+                let chunk = event.results[i][0].transcript.toLowerCase();
+                if (event.results[i].isFinal) newlyFinalizedText += chunk;
+                else interimTranscript += chunk;
+            }
+            let fullMenuPhrase = (newlyFinalizedText + interimTranscript).trim();
+            if (fullMenuPhrase) {
+                document.getElementById('status').innerText = `🎙️ Heard: "${fullMenuPhrase}"`;
+                handleMenuCommand(fullMenuPhrase);
+            }
+        };
+
+        menuRecognition.onend = function() {
+            if (shouldMenuRun) {
+                setTimeout(() => { try { menuRecognition.start(); } catch(e) {} }, 300);
+            }
+        };
+    }
+</script>
+</body>
+</html>
