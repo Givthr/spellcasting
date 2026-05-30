@@ -110,7 +110,6 @@
         <h1>SPELLCASTING</h1>
         <p class="menu-subtitle">A Voice-Controlled Spelling Adventure</p>
         
-        <!-- Difficulty choices hidden behind 'START GAME' boundary state selection wrapper, like before -->
         <div id="difficultyWrapper" class="hidden">
             <div class="difficulty-section">
                 <div class="difficulty-label">CHOOSE DIFFICULTY:</div>
@@ -128,7 +127,6 @@
 
         <div id="status" class="status-box">Waiting for user gesture...</div>
 
-        <!-- Initial gate trigger button display -->
         <button id="startTriggerBtn" class="action-btn" style="background-color: #b68f40; font-size: 1.5rem; padding: 15px 30px;" onclick="revealDifficultyOptions()">
             START GAME
         </button>
@@ -188,7 +186,7 @@
             .catch(function(err) {
                 console.error("[System] Microphone permission denied:", err);
                 overlay.classList.add('hidden');
-                document.getElementById('status').innerText = "❌ Microphone Blocked! Check settings.";
+                document.getElementById('status').innerText = "❌ Microphone Blocked! Check browser settings.";
                 document.getElementById('status').style.color = "#f44336";
             });
     }
@@ -200,19 +198,28 @@
         synth.speak(utterance);
     }
 
-    // Phase 1 Action: Reveal selections area first
     function revealDifficultyOptions() {
         isGameInitiated = true;
         document.getElementById('difficultyWrapper').classList.remove('hidden');
-        document.getElementById('startTriggerBtn').classList.add('hidden'); // Hide entry trigger button safely
+        document.getElementById('startTriggerBtn').classList.add('hidden'); 
         
         document.getElementById('status').innerText = "🎙️ Say: 'Easy', 'Medium', or 'Hard' to launch!";
-        speak("Select difficulty setup level.");
+        speak("Select difficulty level.");
     }
 
-    // Phase 2 Action: Clicking/Speaking a level directly fires the application redirect
     function selectDifficulty(level) {
-        if (!isGameInitiated) return; // Ignore choices if they haven't targeted 'Start Game' first
+        if (!isGameInitiated) return; 
+
+        // CRUCIAL: Immediately strip out tracking and unbind voice handlers to cleanly close channels before migrating windows
+        shouldMenuRun = false;
+        if (menuRecognition) {
+            try {
+                menuRecognition.onresult = null;
+                menuRecognition.onend = null;
+                menuRecognition.stop();
+                console.log("[System] Menu recognition forcefully terminated.");
+            } catch(e) { console.error(e); }
+        }
 
         document.querySelectorAll('.diff-btn').forEach(btn => {
             if (btn.getAttribute('data-diff') === level) {
@@ -222,11 +229,9 @@
             }
         });
 
-        speak(`Launching match layout on ${level} difficulty setting`);
-        shouldMenuRun = false;
-        try { menuRecognition.stop(); } catch(e) {}
+        speak(`Launching match on ${level}`);
         
-        // Pass selections smoothly along to your URL tracking queries configuration directly
+        // Safety timeout buffers navigation, with the critical trailing slash included before parameters
         setTimeout(() => {
             window.location.href = `/game-arena/?difficulty=${level}`;
         }, 800);
@@ -235,7 +240,6 @@
     function handleMenuCommand(transcript) {
         transcript = transcript.toLowerCase().trim();
 
-        // Must hear initialization command sequence first if state tracker flags dead baseline references
         if (!isGameInitiated) {
             if (transcript.includes("start") || transcript.includes("play") || transcript.includes("game") || transcript.includes("begin")) {
                 revealDifficultyOptions();
@@ -244,7 +248,6 @@
             return false;
         }
 
-        // Difficulty triggers track active selections only after the interface unlocks choices
         if (transcript.includes("easy") || transcript.includes("is he") || transcript.includes("eezi")) { 
             selectDifficulty("easy"); 
             return true; 
