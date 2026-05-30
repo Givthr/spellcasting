@@ -247,6 +247,17 @@
     function handleMenuCommand(transcript) {
         transcript = transcript.toLowerCase().trim();
         console.log("[Menu Voice Log Parsing]:", transcript);
+        
+        if (transcript.includes("scores") || transcript.includes("score")) {
+        console.log("[Navigation] Redirecting to /my-scores/");
+        window.location.href = '/my-scores/';
+        return true;
+    }
+    if (transcript.includes("leaderboard") || transcript.includes("leadership") || transcript.includes("leader")) {
+        console.log("[Navigation] Redirecting to /leaderboard/");
+        window.location.href = '/leaderboard/';
+        return true;
+    }
 
         if (!isGameInitiated) {
             if (transcript.includes("start") || transcript.includes("play") || transcript.includes("game") || transcript.includes("begin")) {
