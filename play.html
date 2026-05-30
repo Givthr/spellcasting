@@ -275,13 +275,12 @@
 <script>
     // --- VIDEO INTRO HOOK ROUTING ---
     const video = document.getElementById('introVideo');
-    // Automatically unmute the video the first time the user clicks anywhere on the page
-document.body.addEventListener('click', function() {
-    const video = document.getElementById('introVideo');
-    if (video) {
-        video.muted = false; // Turn the sound back on!
-    }
-}, { once: true }); // { once: true } ensures this click tracker runs only one time
+    document.body.addEventListener('click', function() {
+        const video = document.getElementById('introVideo');
+        if (video) {
+            video.muted = false; 
+        }
+    }, { once: true });
     
     video.onended = function() {
         endIntroSequence();
@@ -290,9 +289,10 @@ document.body.addEventListener('click', function() {
     function endIntroSequence() {
         const overlay = document.getElementById('introOverlay');
         overlay.style.opacity = '0';
-        
         setTimeout(() => {
             overlay.classList.add('hidden');
+            // Automatically spin up the mic on the menu screen to capture commands
+            initMenuVoiceCommands();
         }, 1000);
     }
 
@@ -313,6 +313,7 @@ document.body.addEventListener('click', function() {
     let score = 0;
     let lives = 3;
     let gameOver = false;
+    let gameActive = false; // Track if we are actively playing vs in the menu
     let timeLeft = 15;
     let countdownInterval = null;
 
@@ -334,6 +335,18 @@ document.body.addEventListener('click', function() {
                 btn.classList.remove('selected');
             }
         });
+        speak(`Difficulty set to ${level}`);
+    }
+
+    // Command listener for the Main Menu
+    function initMenuVoiceCommands() {
+        gameActive = false;
+        try {
+            recognition.start();
+            console.log("Menu voice commands active.");
+        } catch(e) {
+            console.log("Mic already active.");
+        }
     }
 
     function startGame() {
@@ -341,6 +354,7 @@ document.body.addEventListener('click', function() {
         score = 0;
         lives = 3;
         gameOver = false;
+        gameActive = true;
         finalSpelling = "";
 
         document.getElementById('score').innerText = score;
@@ -353,18 +367,23 @@ document.body.addEventListener('click', function() {
         document.getElementById('menuScreen').classList.add('hidden');
         document.getElementById('gameScreen').classList.remove('hidden');
 
+        // Stop menu tracking temporarily to cleanly cycle the recognition engine
+        recognition.stop();
+
         setTimeout(nextWord, 500);
-        
         setTimeout(startListening, 2000); 
     }
 
     function returnToMenu() {
         stopTimer();
+        gameActive = false;
         recognition.stop();
         if (synth.speaking) synth.cancel();
 
         document.getElementById('gameScreen').classList.add('hidden');
         document.getElementById('menuScreen').classList.remove('hidden');
+        
+        setTimeout(initMenuVoiceCommands, 1000);
     }
 
     function speak(text) {
@@ -446,7 +465,6 @@ document.body.addEventListener('click', function() {
         finalSpelling = "";
         
         document.getElementById('targetSpellDisplay').innerText = currentWord;
-        
         document.getElementById('spellingDisplay').innerText = "---";
         document.getElementById('status').innerText = "An enemy approaches! Prepare your spell...";
         document.getElementById('spellingDisplay').style.color = "#00bcd4"; 
@@ -499,10 +517,38 @@ document.body.addEventListener('click', function() {
         document.getElementById('status').innerText = "Input cleared! Speak clearly now.";
     }
 
-    // --- AUDIO VALIDATION ENGINE ---
+    // --- VOICESTREAM CONTROL ROUTER ---
     recognition.onresult = function(event) {
+        let rawTranscript = "";
+        for (let i = event.resultIndex; i < event.results.length; ++i) {
+            rawTranscript += event.results[i][0].transcript.toLowerCase();
+        }
+
+        // ================= MENU CONTROL ROUTE =================
+        if (!gameActive) {
+            console.log("Menu Voice Input:", rawTranscript);
+            
+            if (rawTranscript.includes("easy")) {
+                selectDifficulty("easy");
+                finalSpelling = ""; // Reset tokens
+            } else if (rawTranscript.includes("medium")) {
+                selectDifficulty("medium");
+                finalSpelling = "";
+            } else if (rawTranscript.includes("hard")) {
+                selectDifficulty("hard");
+                finalSpelling = "";
+            }
+            
+            if (rawTranscript.includes("start") || rawTranscript.includes("play")) {
+                startGame();
+            }
+            return; // Halt logic here when on the menu
+        }
+
+        // ================= IN-GAME SPELLING ROUTE =================
         if (gameOver) return;
         let interimTranscript = "";
+        finalSpelling = ""; // Re-calculate to match raw streaming structures safely
 
         for (let i = event.resultIndex; i < event.results.length; ++i) {
             let transcriptChunk = event.results[i][0].transcript.toLowerCase();
@@ -518,18 +564,15 @@ document.body.addEventListener('click', function() {
         let liveTotalSpelling = finalSpelling + interimTranscript;
         document.getElementById('spellingDisplay').innerText = liveTotalSpelling.split("").join(" ");
 
-        if (liveTotalSpelling === currentWord) {
+        if (liveTotalSpelling === currentWord.replace(/[^a-z]/g, "")) {
             score++;
             stopTimer();
             
             const sprite = document.getElementById('enemySprite');
             sprite.classList.add('monster-hit');
-            setTimeout(() => {
-                sprite.classList.remove('monster-hit');
-            }, 500); 
+            setTimeout(() => { sprite.classList.remove('monster-hit'); }, 500); 
 
             document.getElementById('enemyHealth').style.width = "0%";
-            
             document.getElementById('score').innerText = score;
             document.getElementById('status').innerText = "💥 Critical Hit! Enemy defeated!";
             document.getElementById('spellingDisplay').style.color = "#4caf50";
@@ -542,7 +585,7 @@ document.body.addEventListener('click', function() {
             setTimeout(nextWord, 2000);
             setTimeout(startListening, 4500); 
         }
-        else if (liveTotalSpelling.length >= currentWord.length && liveTotalSpelling !== currentWord) {
+        else if (liveTotalSpelling.length >= currentWord.replace(/[^a-z]/g, "").length && liveTotalSpelling !== currentWord.replace(/[^a-z]/g, "")) {
             lives--;
             stopTimer();
             renderHearts();
@@ -550,9 +593,7 @@ document.body.addEventListener('click', function() {
 
             const sprite = document.getElementById('enemySprite');
             sprite.classList.add('monster-strike');
-            setTimeout(() => {
-                sprite.classList.remove('monster-strike');
-            }, 400);
+            setTimeout(() => { sprite.classList.remove('monster-strike'); }, 400);
 
             if (lives <= 0) {
                 triggerGameOver();
@@ -568,8 +609,9 @@ document.body.addEventListener('click', function() {
     };
 
     recognition.onend = function() {
-        if (!gameOver) {
-            console.log("Microphone paused.");
+        // Keeps microphone awake on menu transitions or unexpected timeouts
+        if (!gameOver && !gameActive) {
+            try { recognition.start(); } catch(e){}
         }
     };
 
