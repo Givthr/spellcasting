@@ -121,4 +121,203 @@
 
         <div style="margin: 20px 0;">
             <p style="color: #aaa; font-size: 1rem; line-height: 1.6;">
-                <strong>Rules:</strong> Listen to the AI speak a word, then spell it out loud letter-by-letter. You have
+                <strong>Rules:</strong> Listen to the AI speak a word, then spell it out loud letter-by-letter. You have 3 hearts, 15 seconds per word, and you can repeat the audio clue at any time!
+            </p>
+        </div>
+
+        <div id="status" class="status-box">Waiting for user gesture...</div>
+
+        <button id="startTriggerBtn" class="action-btn" style="background-color: #b68f40; font-size: 1.5rem; padding: 15px 30px;" onclick="revealDifficultyOptions()">
+            START GAME
+        </button>
+        <button class="action-btn" style="background-color: #3a3f4d; color: #ccc;" onclick="window.location.href='/my-scores/'">
+            MY SCORES 📊
+        </button>
+        <button class="action-btn" style="background-color: #3a3f4d; color: #ccc;" onclick="window.location.href='/leaderboard/'">
+            LEADERBOARD 🏆
+        </button>
+
+        <p style="color:#4caf50; margin-top:15px; font-weight: bold; line-height: 1.5; font-size: 0.95rem;">
+            🎤 Menu Voice Commands:
+            <br>
+            <span style="color: #aaa; font-weight: normal;">Say: "Start Game" first, then choose: "Easy", "Medium", or "Hard"</span>
+        </p>
+    </div>
+</div>
+
+<script>
+    const video = document.getElementById('introVideo');
+    let isGameInitiated = false; 
+    let shouldMenuRun = false;
+    
+    // Safety tracking timestamp base
+    let lastCommandTimestamp = Date.now();
+
+    const synth = window.speechSynthesis;
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    let menuRecognition = null;
+
+    if (SpeechRecognition) {
+        menuRecognition = new SpeechRecognition();
+        menuRecognition.continuous = true;
+        menuRecognition.interimResults = true;
+        menuRecognition.lang = 'en-US';
+    } else {
+        alert("Web Speech API recognition is unavailable. Please run on Google Chrome or Edge.");
+    }
+
+    document.body.addEventListener('click', function() {
+        if (video) { video.muted = false; }
+    }, { once: true });
+    
+    video.onended = function() { endIntroSequence(); };
+
+    function endIntroSequence() {
+        const overlay = document.getElementById('introOverlay');
+        overlay.style.opacity = '0';
+        
+        navigator.mediaDevices.getUserMedia({ audio: true })
+            .then(function(stream) {
+                console.log("[System] Microphone authorized.");
+                stream.getTracks().forEach(track => track.stop());
+                
+                setTimeout(() => {
+                    overlay.classList.add('hidden');
+                    initMenuVoiceCommands(); 
+                }, 400);
+            })
+            .catch(function(err) {
+                console.error("[System] Microphone permission denied:", err);
+                overlay.classList.add('hidden');
+                document.getElementById('status').innerText = "❌ Microphone Blocked! Check browser settings.";
+                document.getElementById('status').style.color = "#f44336";
+            });
+    }
+
+    function speak(text) {
+        if (synth.speaking) synth.cancel();
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.rate = 0.95;
+        synth.speak(utterance);
+    }
+
+    function revealDifficultyOptions() {
+        isGameInitiated = true;
+        
+        document.getElementById('difficultyWrapper').classList.remove('hidden');
+        document.getElementById('startTriggerBtn').classList.add('hidden'); 
+        
+        document.getElementById('status').innerText = "🎙️ Ready! Say: 'Easy', 'Medium', or 'Hard'";
+        speak("Select difficulty level.");
+    }
+
+    function selectDifficulty(level) {
+        // Kill background voice synthesis to keep navigation channels completely clear
+        if (synth.speaking) synth.cancel();
+
+        shouldMenuRun = false;
+        if (menuRecognition) {
+            try {
+                menuRecognition.onresult = null;
+                menuRecognition.onend = null;
+                menuRecognition.stop();
+                console.log("[System] Menu recognition forcefully terminated.");
+            } catch(e) { console.error(e); }
+        }
+
+        document.querySelectorAll('.diff-btn').forEach(btn => {
+            if (btn.getAttribute('data-diff') === level) {
+                btn.classList.add('selected');
+            } else {
+                btn.classList.remove('selected');
+            }
+        });
+
+        console.log(`[Navigation] Redirecting to /game-arena/?difficulty=${level}`);
+        
+        // CRUCIAL TRICK: Fixed slash configuration matching your strict Django urls.py routes setup
+        window.location.href = `/game-arena/?difficulty=${level}`;
+    }
+
+    function handleMenuCommand(transcript) {
+        transcript = transcript.toLowerCase().trim();
+        console.log("[Menu Voice Log Parsing]:", transcript);
+
+        if (!isGameInitiated) {
+            if (transcript.includes("start") || transcript.includes("play") || transcript.includes("game") || transcript.includes("begin")) {
+                revealDifficultyOptions();
+                return true;
+            }
+            return false;
+        }
+
+        if (transcript.includes("easy") || transcript.includes("is he") || transcript.includes("eezi")) { 
+            selectDifficulty("easy"); 
+            return true; 
+        }
+        if (transcript.includes("medium") || transcript.includes("normal") || transcript.includes("mid")) { 
+            selectDifficulty("medium"); 
+            return true; 
+        }
+        if (transcript.includes("hard") || transcript.includes("heart") || transcript.includes("art")) { 
+            selectDifficulty("hard"); 
+            return true; 
+        }
+        return false;
+    }
+
+    function initMenuVoiceCommands() {
+        shouldMenuRun = true;
+        try { menuRecognition.stop(); } catch(e) {}
+
+        setTimeout(() => {
+            if (!shouldMenuRun) return;
+            try {
+                menuRecognition.start();
+                if(!isGameInitiated) {
+                    document.getElementById('status').innerText = "🎙️ Menu Mic Active! Say: 'Start Game'";
+                } else {
+                    document.getElementById('status').innerText = "🎙️ Choice Active! Say: 'Easy', 'Medium', or 'Hard'";
+                }
+                document.getElementById('status').style.color = "#ffeb3b";
+            } catch(e) { console.error("Menu engine restart delay:", e); }
+        }, 300);
+    }
+
+    if (menuRecognition) {
+        menuRecognition.onresult = function(event) {
+            let interimTranscript = "";
+            let newlyFinalizedText = "";
+            let currentResultTimestamp = event.timeStamp; 
+
+            for (let i = event.resultIndex; i < event.results.length; ++i) {
+                let chunk = event.results[i][0].transcript.toLowerCase();
+                if (event.results[i].isFinal) newlyFinalizedText += chunk;
+                else interimTranscript += chunk;
+            }
+            let fullMenuPhrase = (newlyFinalizedText + interimTranscript).trim();
+            
+            if (fullMenuPhrase) {
+                // Ignore trailing vocal feedback echoes processed immediately during phase shifts
+                if (isGameInitiated && (currentResultTimestamp - lastCommandTimestamp < 1000)) {
+                    console.log("[Anti-Echo Shield] Wiped trailing buffer text link: ", fullMenuPhrase);
+                    return;
+                }
+
+                document.getElementById('status').innerText = `🎙️ Heard: "${fullMenuPhrase}"`;
+                
+                if (handleMenuCommand(fullMenuPhrase)) {
+                    lastCommandTimestamp = currentResultTimestamp; 
+                }
+            }
+        };
+
+        menuRecognition.onend = function() {
+            if (shouldMenuRun) {
+                setTimeout(() => { try { menuRecognition.start(); } catch(e) {} }, 300);
+            }
+        };
+    }
+</script>
+</body>
+</html>
