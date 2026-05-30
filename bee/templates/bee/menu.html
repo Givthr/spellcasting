@@ -382,7 +382,7 @@
         if (lore) lore.classList.add('hidden');
         
         document.getElementById('status').innerText = "📖 Choose your path. Novice, Adept, or Master?";
-        speak("Choose your path. Novice, Adept, or Master?");
+        speak("Choose your path.");
     }
 
     function selectDifficulty(level) {
@@ -460,7 +460,7 @@
             try {
                 if(!isGameInitiated) {
                     const line1 = "I am the Talking Tome, a tome automaton - an automatome!";
-                    const line2 = "A magical auditory and verbal connection between us has been established. Are you ready to enter the Arena? Say 'Start'";            
+                    const line2 = "A magical auditory and verbal connection between us has been established. Are you ready to enter the Arena?";            
                     document.getElementById('status').innerHTML = "📖 " + line1 + "<br>" + line2;
                     speak(line1 + " " + line2);
                 } else {
