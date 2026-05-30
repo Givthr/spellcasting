@@ -1,9 +1,11 @@
+# urls.py
 from django.contrib import admin
 from django.urls import path
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib.auth import views as auth_views
-from bee.views import game_view, save_score, leaderboard_view, my_scores_view, register_view
+# FIXED: Added game_arena_view to the import statement below
+from bee.views import game_view, game_arena_view, save_score, leaderboard_view, my_scores_view, register_view
 
 urlpatterns = [
     path('admin/', admin.site.urls),
