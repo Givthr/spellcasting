@@ -4,31 +4,108 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Spellcasting Battle Arena</title>
+    <title>SpellCasting Arena - Active Combat</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&family=Cinzel:wght@600&family=Raleway:wght@400;600;700&display=swap" rel="stylesheet"/>
+
     <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --dark-bg:   #1A1E24;
+            --card-bg:   #22272E;
+            --card-border: #2E3A4A;
+            --gold:      #C8972A;
+            --gold-lt:   #E8B84B;
+            --blue-glow: #4FC3F7;
+            --text:      #D0D8E0;
+            --muted:     #7A8A9A;
+            
+            --success:   #81C784;
+            --warning:   #FFB74D;
+            --danger:    #EF5350;
+        }
+
         body {
-            background-color: #282c34;
-            color: white;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            min-height: 100vh;
+            background-color: var(--dark-bg);
+            color: var(--text);
+            font-family: 'Raleway', sans-serif;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            height: 100vh;
             margin: 0;
             overflow: hidden;
         }
 
-        /* ==================== CORE GAME UI COMPONENTS ==================== */
-        .container {
-            text-align: center;
-            background-color: #1e222b;
-            padding: 40px;
-            border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
-            max-width: 600px;
-            width: 90%;
+        #stars { 
+            position: fixed; 
+            inset: 0; 
+            z-index: 0; 
+            pointer-events: none; 
         }
+
+        .container {
+            position: relative;
+            z-index: 10;
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            padding: 45px;
+            border-radius: 24px;
+            text-align: center;
+            width: 90%;
+            max-width: 650px;
+            box-shadow: 0 0 0 1px rgba(79,195,247,.08), 
+                        0 20px 60px rgba(0,0,0,.6), 
+                        inset 0 1px 0 rgba(255,255,255,.04);
+            transition: transform 0.3s ease;
+        }
+
+        h1 {
+            font-family: 'Cinzel Decorative', cursive;
+            font-size: clamp(1.8rem, 4vw, 2.6rem);
+            color: var(--gold); 
+            letter-spacing: 4px; 
+            text-transform: uppercase;
+            margin-top: 0;
+            margin-bottom: 6px;
+            text-shadow: 0 0 20px rgba(200,151,42,.6), 0 0 60px rgba(79,195,247,.3);
+        }
+
+        .menu-subtitle {
+            font-family: 'Cinzel', serif; 
+            font-size: .85rem; 
+            color: var(--muted);
+            letter-spacing: 3px; 
+            text-transform: uppercase; 
+            margin-bottom: 35px;
+        }
+
+        .stats-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 0 0 30px 0;
+            padding-bottom: 20px;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .stat-badge {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        .score-box { 
+            color: var(--blue-glow); 
+            font-family: 'Cinzel', serif;
+            text-shadow: 0 0 15px rgba(79,195,247,.4);
+        }
+        .timer-box { color: var(--warning); width: 90px; }
+        .hearts-box { letter-spacing: 2px; }
 
         .battle-arena {
             margin: 20px auto;
@@ -38,7 +115,7 @@
             justify-content: center;
         }
         .enemy-sprite {
-            font-size: 5rem;
+            font-size: 5rem; 
             min-height: 100px;
             margin-bottom: 10px;
             transition: transform 0.2s ease, opacity 0.5s ease;
@@ -55,7 +132,7 @@
         .health-bar {
             width: 100%;
             height: 100%;
-            background-color: #e53935;
+            background-color: #e53935; 
             transition: width 0.3s ease-in-out;
         }
         .enemy-name {
@@ -66,61 +143,20 @@
             margin-bottom: 5px;
         }
 
-        h1 { color: #b68f40; font-size: 2.5rem; margin-bottom: 10px; }
-
-        .stats-row {
-            display: flex;
-            justify-content: space-around;
-            align-items: center;
-            margin: 20px 0;
-            width: 100%;
-        }
-        .score-box { color: #4caf50; font-size: 1.5rem; font-weight: bold; }
-        .timer-box { color: #e53935; font-size: 1.6rem; font-weight: bold; background: #2c1e21; padding: 5px 15px; border-radius: 6px; border: 1px solid #7a2022; }
-        .hearts-box { font-size: 1.8rem; color: #f44336; letter-spacing: 5px; }
-        .status-box { color: #ffeb3b; font-size: 1.2rem; min-height: 30px; margin-bottom: 20px; }
-        
-        .spelling-display {
-            font-size: 3rem;
-            letter-spacing: 8px;
-            color: #00bcd4;
-            margin: 30px 0;
-            min-height: 70px;
-            text-transform: uppercase;
-            font-weight: bold;
-        }
-        button.action-btn {
-            background-color: #4caf50;
-            color: white;
-            border: none;
-            padding: 15px 30px;
-            font-size: 1.2rem;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: background 0.2s, transform 0.1s;
-            margin: 10px;
-            font-weight: bold;
-        }
-        button.action-btn:hover { background-color: #45a049; transform: scale(1.02); }
-        button.action-btn:active { transform: scale(0.98); }
-        button:disabled { background-color: #555 !important; cursor: not-allowed; transform: none !important; }
-        .hidden { display: none !important; }
-
-        /* ==================== BATTLE ANIMATIONS ==================== */
         @keyframes monsterDamage {
             0% { transform: scale(1) translateX(0); filter: brightness(1) drop-shadow(0 0 0 rgba(255,0,0,0)); }
-            15% { transform: scale(1.3) translateX(-10px); filter: brightness(5) drop-shadow(0 0 15px #ff3333); }
-            30% { transform: scale(1.1) translateX(10px); filter: brightness(5) drop-shadow(0 0 15px #fff); }
-            45% { transform: scale(1.2) translateX(-8px); filter: brightness(3); }
+            15% { transform: scale(1.2) translateX(-10px); filter: brightness(5) drop-shadow(0 0 15px #ff3333); }
+            30% { transform: scale(1) translateX(10px); filter: brightness(5) drop-shadow(0 0 15px #fff); }
+            45% { transform: scale(1.1) translateX(-8px); filter: brightness(3); }
             60% { transform: scale(1) translateX(8px); filter: brightness(2); }
-            80% { transform: scale(1.1) translateX(-4px); filter: brightness(1.5); }
+            80% { transform: scale(1.05) translateX(-4px); filter: brightness(1.5); }
             100% { transform: scale(1) translateX(0); filter: brightness(1) drop-shadow(0 0 0 rgba(0,0,0,0)); }
         }
 
         @keyframes monsterAttack {
             0% { transform: translateY(0) scale(1); filter: sepia(0); }
-            20% { transform: translateY(15px) scale(0.9); filter: sepia(1) hue-rotate(-50deg) saturate(5); } 
-            40% { transform: translateY(-35px) scale(1.2); } 
+            20% { transform: translateY(15px) scale(0.9); filter: sepia(1) hue-rotate(-50deg) saturate(5); }
+            40% { transform: translateY(-35px) scale(1.2); }
             60% { transform: translateY(0) scale(1); }
             80% { transform: translateY(-5px); }
             100% { transform: translateY(0); }
@@ -128,18 +164,83 @@
 
         .monster-hit { animation: monsterDamage 0.5s ease-in-out forwards; }
         .monster-strike { animation: monsterAttack 0.4s ease-in-out forwards; }
+
+        .status-box {
+            color: #fff;
+            margin: 15px 0;
+            min-height: 35px;
+            font-size: 1.2rem;
+            font-weight: 500;
+            transition: color 0.2s ease;
+        }
+
+        .spelling-display {
+            font-size: 3.2rem;
+            font-weight: bold;
+            letter-spacing: 6px;
+            margin: 30px 0;
+            color: var(--blue-glow);
+            min-height: 75px;
+            text-transform: uppercase;
+            word-wrap: break-word;
+            text-shadow: 0 0 15px rgba(79,195,247,.3);
+        }
+
+        .action-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 25px;
+        }
+
+        button.action-btn {
+            border: none;
+            padding: 16px 24px;
+            border-radius: 14px;
+            cursor: pointer;
+            font-family: 'Cinzel', serif;
+            font-size: 0.95rem;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            transition: transform .15s, box-shadow .15s, filter .15s, background .2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        button.action-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            filter: brightness(1.08);
+        }
+
+        button.action-btn:active:not(:disabled) {
+            transform: scale(0.98);
+        }
+
+        button:disabled {
+            background: #2E3A4A !important;
+            color: var(--muted) !important;
+            box-shadow: none !important;
+            cursor: not-allowed;
+            transform: none !important;
+            filter: none !important;
+            opacity: 0.4;
+        }
     </style>
 </head>
 <body>
 
+{% csrf_token %}
+
+<canvas id="stars"></canvas>
+
 <div class="container">
     <div id="gameScreen">
-        <h1>SPELLCASTING BATTLE</h1>
-        
         <div class="stats-row">
-            <div class="score-box">MONSTERS DEFEATED: <span id="score">0</span></div>
-            <div class="timer-box">⏱️ <span id="timerDisplay">15</span>s</div>
-            <div class="hearts-box" id="heartsDisplay">❤️ ❤️ ❤️</div>
+            <div class="stat-badge score-box">SCORE: <span id="score">0</span></div>
+            <div class="stat-badge timer-box">⏱️ <span id="timerDisplay">15</span>s</div>
+            <div class="stat-badge hearts-box" id="heartsDisplay">❤️ ❤️ ❤️</div>
         </div>
 
         <div class="battle-arena">
@@ -150,112 +251,287 @@
             <div id="enemySprite" class="enemy-sprite">👻</div>
         </div>
 
-        <div style="background: #15181f; border: 2px dashed #b68f40; padding: 15px; border-radius: 8px; margin: 15px 0;">
-            <div style="font-size: 0.8rem; color: #aaa; letter-spacing: 2px;">READ ALOUD TO CAST:</div>
-            <div id="targetSpellDisplay" style="font-size: 2.2rem; color: #ffeb3b; font-weight: bold; text-transform: uppercase; margin-top: 5px; letter-spacing: 1px;">---</div>
-        </div>
-
-        <div id="status" class="status-box">Preparing spell...</div>
+        <div id="status" class="status-box">Loading arena...</div>
         <div id="spellingDisplay" class="spelling-display">---</div>
 
-        <button class="action-btn" style="background-color: #9c27b0;" id="repeatBtn" onclick="repeatWord()">HOW DO I CAST IT?</button>
-        <button class="action-btn" style="background-color: #ff9800;" id="clearBtn" onclick="clearSpelling()">RESET INCANTATION</button>
-        <button class="action-btn" style="background-color: #757575;" id="skipBtn" onclick="nextWord()">FLEE BATTLE</button>
-        
-        <button class="action-btn" style="background-color: #d32f2f; display: block; margin: 30px auto 0 auto; font-size: 0.9rem; padding: 8px 16px;" id="exitBtn" onclick="returnToMenu()">RETREAT TO MENU</button>
+        <div class="action-layout">
+            <button class="action-btn" id="repeatBtn" style="background:#512DA8; color: white;" onclick="repeatWord()">
+                📖 RECALL INCANTATION
+            </button>
+            <button class="action-btn" id="clearBtn" style="background: #37474F; color: white;" onclick="clearSpelling()">
+                ✨ DISPEL RUNES
+            </button>
+        </div>
+
+        <button class="action-btn" id="exitBtn" style="width: 100%; margin-top: 15px; background: #2E3A4A; color: var(--text);" onclick="exitToMenu()">
+            🚪 RETREAT TO BASE
+        </button>
     </div>
 </div>
 
 <script>
-    // --- GAME ENGINE STATE ---
+    /* ==========================================================================
+       DYNAMIC BACKGROUND STARDUST CONTEXT MANAGERS
+       ========================================================================== */
+    (function() {
+        const c = document.getElementById('stars');
+        const ctx = c.getContext('2d');
+        let W, H, stars = [];
+        function resize() {
+            W = c.width = window.innerWidth; H = c.height = window.innerHeight;
+            stars = Array.from({length: 180}, () => ({
+                x: Math.random()*W, y: Math.random()*H,
+                r: Math.random()*1.4+.2, a: Math.random(), da: (Math.random()-.5)*.008
+            }));
+        }
+        function draw() {
+            ctx.clearRect(0,0,W,H);
+            stars.forEach(s => {
+                s.a = Math.max(.05, Math.min(1, s.a + s.da));
+                if (s.a <= .05 || s.a >= 1) s.da *= -1;
+                ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, Math.PI*2);
+                ctx.fillStyle = `rgba(200,220,255,${s.a})`; ctx.fill();
+            });
+            requestAnimationFrame(draw);
+        }
+        window.addEventListener('resize', resize); resize(); draw();
+    })();
+
+    /* ==========================================================================
+       GAME STATE DICTIONARIES & CONTROLLERS (100 RPG WORDS PER DIFFICULTY)
+       ========================================================================== */
     const difficultyWords = {
-        easy: ["lumos", "nox", "incendio", "protego", "silencio", "reducto", "accio", "diffindo", "aguamenti", "evanesco", "imperio", "revelio", "tergeo", "finite", "relashio", "alohomora", "morsmordre", "avis", "crucio", "enervate"],
-        medium: ["expecto patronum", "sectumsempra", "expelliarmus", "wingardium leviosa", "arresto momentum", "petrificus totalus", "riddikulus", "confundo", "avada kedavra", "priori incantatem", "legilimens", "obliviate", "cave inimicum", "vade retro", "ignis fatuus", "corpus inane", "magna veritas", "aqua eructo", "salvio hexia", "exura vita"],
-        hard: ["piertotum locomotor", "lacarnum inflamarae", "serpensortia veni", "locomotor mortis", "tarantallegra passus", "furnunculus maxima", "densaugeo cresco", "deletrius pulveris", "impedimenta obstructo", "incarcerous vincula", "mobilicorpus movere", "muffliato surdus", "oppugno inimicos", "sonorus maxima", "quietus deminuere", "waddiwasi projectum", "homenum revelio", "fianto duri", "partis temporus", "vulnera sanentur"]
+        easy: [
+            "fire", "ice", "hex", "cast", "zap", "bolt", "burn", "slam", "whip", "jab",
+            "stun", "daze", "flame", "boil", "arc", "ray", "smite", "slash", "stab", "shock",
+            "hurl", "lash", "blast", "chop", "melt", "bite", "claw", "hack", "tear", "rend",
+            "flare", "spark", "beam", "slay", "ruin", "doom", "void", "dark", "pain", "sun",
+            "dawn", "dusk", "moon", "star", "nova", "gash", "sear", "bash", "maul", "kill",
+            "nuke", "wilt", "scald", "singe", "curse", "smash", "crush", "break", "split", "burst",
+            "erupt", "frost", "chill", "wind", "gale", "gust", "dust", "flay", "gouge", "strike",
+            "blaze", "ash", "magma", "pyre", "volt", "acid", "toxic", "venom", "smog", "mist",
+            "hail", "snow", "rain", "storm", "surge", "flash", "fang", "bone", "blood", "gore",
+            "chomp", "stomp", "punch", "drown", "choke", "bleed", "rot", "rust", "decay", "char"
+        ],
+        medium: [
+            "punish", "pummel", "cleave", "pierce", "ignite", "freeze", "shatter", "thunder", "poison", "scorch",
+            "destroy", "batter", "cripple", "sunder", "impale", "skewer", "kindle", "blister", "shadow", "nether",
+            "arcane", "mystic", "astral", "cosmic", "radiant", "divine", "devour", "consume", "immolate", "deluge",
+            "cyclone", "tornado", "tempest", "vortex", "meteor", "eclipse", "smolder", "trample", "vanquish", "abyssal",
+            "infernal", "radiate", "barrage", "bombard", "cascade", "explode", "rupture", "implode", "banish", "execute",
+            "hellfire", "wildfire", "blizzard", "eruption", "massacre", "butcher", "throttle", "behead", "decimate", "atomize",
+            "vaporize", "dissolve", "liquefy", "petrify", "lacerate", "puncture", "demolish", "dynamite", "submerge", "engulf",
+            "smother", "bludgeon", "crucify", "torture", "sunlight", "ravage", "amputate", "mutilate", "backstab", "headshot",
+            "asphyxia", "corrode", "oxidize", "combust", "detonate", "stampede", "typhoon", "tsunami", "mudslide", "rockfall",
+            "sinkhole", "firefall", "sunbeam", "moonbeam", "starfall", "darkstar", "firebolt", "icestorm", "sunburst", "moonfall"
+        ],
+        hard: [
+            "conflagration", "obliteration", "devastation", "annihilation", "electrocution", "asphyxiation", "strangulation", "decapitation", "disintegration", "cataclysm",
+            "apocalypse", "armageddon", "maelstrom", "singularity", "hemorrhage", "laceration", "mutilation", "evisceration", "excruciation", "sacrifice",
+            "eradication", "extermination", "assassination", "incineration", "vivisection", "immolation", "exsanguinate", "pulverization", "liquefaction", "electrocute",
+            "thunderbolt", "lightning", "firestorm", "avalanche", "earthquake", "hurricane", "superstorm", "thunderstorm", "bloodstrike", "skullcrusher",
+            "spinebreaker", "bonecrusher", "heartseeker", "soulreaper", "voidbringer", "doomhammer", "deathstrike", "venomstrike", "froststrike", "stormstrike",
+            "shadowstrike", "flamestrike", "earthshatter", "mindflayer", "meteorstrike", "spellstrike", "bloodbath", "defenestration", "guillotine", "crucifixion",
+            "slaughterhouse", "bloodspatter", "dismemberment", "suffocation", "incinerator", "atomization", "vaporization", "frostbite", "decimation", "destruction",
+            "pyrostorm", "cryostorm", "electrostorm", "darkmatter", "supernova", "solarflare", "permafrost", "flashfreeze", "bloodcurse", "nightterror",
+            "spellshock", "deathbringer", "lightbringer", "painbringer", "blightbringer", "doomweaver", "soulstealer", "lifedrainer", "bloodsucker", "fleshrender",
+            "bonebreaker", "necksnapper", "backbreaker", "skullsplitter", "gutwrencher", "throatcutter", "blooddrinker", "brainmelter", "fleshpeeler", "soulcrusher"
+        ]
     };
 
     const monsterNames = ["Shadow Demon", "Wraith", "Abyssal Ghoul", "Banshee", "Undead Skeleton", "Poltergeist"];
     const monsterSprites = ["👿", "👻", "👹", "💀", "🧛", "🧟"];
 
-    // Safely retrieve URL parameters or default to easy
+    // Dynamically query URL context variables passed over from menu select sequence
     const urlParams = new URLSearchParams(window.location.search);
     let selectedDifficultySetting = urlParams.get('difficulty') || "easy";
-
+    
     let wordsPool = [];
     let currentWord = "";
     let finalSpelling = "";
+    
     let score = 0;
     let lives = 3;
     let gameOver = false;
+    let isTransitioning = false; 
+
     let timeLeft = 15;
     let countdownInterval = null;
 
     const synth = window.speechSynthesis;
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    const recognition = new SpeechRecognition();
-    
-    recognition.continuous = true;
-    recognition.interimResults = true;
-    recognition.lang = 'en-US';
+    const SpeechRecognition = window.webkitSpeechRecognition || window.SpeechRecognition;
+    const SpeechGrammarList = window.webkitSpeechGrammarList || window.SpeechGrammarList;
+    let recognition = null;
 
-    // Auto-init game on DOM load
-    window.addEventListener('DOMContentLoaded', () => {
-        startGame();
-    });
+    const validLetters = {
+        "a":"a", "ay":"a", "hey":"a",
+        "b":"b", "be":"b", "bee":"b",
+        "c":"c", "see":"c", "sea":"c",
+        "d":"d", "dee":"d",
+        "e":"e",
+        "f":"f", "ef":"f",
+        "g":"g", "jee":"g",
+        "h":"h", "aitch":"h",
+        "i":"i", "eye":"i",
+        "j":"j", "jay":"j",
+        "k":"k", "kay":"k",
+        "l":"l", "el":"l",
+        "m":"m", "em":"m",
+        "n":"n", "en":"n",
+        "o":"o", "oh":"o",
+        "p":"p", "pee":"p",
+        "q":"q", "queue":"q",
+        "r":"r", "are":"r", "our":"r",
+        "s":"s", "ess":"s",
+        "t":"t", "tea":"t", "tee":"t",
+        "u":"u", "you":"u",
+        "v":"v", "vee":"v",
+        "w":"w", "doubleyou":"w",
+        "x":"x", "ex":"x",
+        "y":"y", "why":"y",
+        "z":"z", "zee":"z", "zed":"z"
+    };
+
+    if (SpeechRecognition) {
+        recognition = new SpeechRecognition();
+        recognition.continuous = true; 
+        recognition.interimResults = true;
+        recognition.lang = 'en-US';
+
+        if (SpeechGrammarList) {
+            const grammarWords = Object.keys(validLetters);
+            const jsgfGrammar = `#JSGF V1.0; grammar letters; public <letter> = ${grammarWords.join(' | ')} ;`;
+            const speechRecognitionList = new SpeechGrammarList();
+            speechRecognitionList.addFromString(jsgfGrammar, 1);
+            recognition.grammars = speechRecognitionList;
+        }
+    } else {
+        alert("Your browser does not support Web Speech API. Please use Google Chrome.");
+    }
+
+    function exitToMenu() {
+        gameOver = true;     
+        stopTimer();                
+        safelyStopRecognition();    
+        if (synth && synth.speaking) {
+            synth.cancel();         
+        }
+        window.location.href = "/"; // Navigate back to your primary routing view map context
+    }
+
+    function speak(text, callback) {
+        if (synth.speaking) synth.cancel();
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.rate = 0.85;
+        if(callback) utterance.onend = callback;
+        synth.speak(utterance);
+    }
+
+    function renderHearts() {
+        let hearts = "";
+        for (let i = 0; i < 3; i++) {
+            hearts += i < lives ? "❤️ " : "🖤 ";
+        }
+        document.getElementById('heartsDisplay').innerText = hearts;
+    }
 
     function startGame() {
         wordsPool = [...difficultyWords[selectedDifficultySetting]];
         score = 0;
         lives = 3;
         gameOver = false;
-        finalSpelling = "";
+        isTransitioning = false;
 
         document.getElementById('score').innerText = score;
         renderHearts();
-        
-        document.getElementById('repeatBtn').disabled = false;
-        document.getElementById('clearBtn').disabled = false;
-        document.getElementById('skipBtn').disabled = false;
 
-        setTimeout(nextWord, 500);
-        setTimeout(startListening, 2000); 
+        setInterfaceDisabled(false);
+        nextWord();
     }
 
-    function returnToMenu() {
-        stopTimer();
-        recognition.stop();
-        if (synth.speaking) synth.cancel();
-        // Redirect back to main menu layout view
-        window.location.href = '/'; 
-    }
+    function nextWord() {
+        if (gameOver) return;
+        isTransitioning = false;
+        setInterfaceDisabled(false);
 
-    function speak(text) {
-        if (synth.speaking) synth.cancel();
-        const utterance = new SpeechSynthesisUtterance(text);
-        utterance.rate = 0.9;
-        synth.speak(utterance);
-    }
-
-    function renderHearts() {
-        let heartsStr = "";
-        for (let i = 0; i < 3; i++) {
-            heartsStr += (i < lives) ? "❤️ " : "🖤 "; 
+        if (wordsPool.length === 0) {
+            gameOver = true;
+            stopTimer();
+            safelyStopRecognition();
+            document.getElementById('status').innerText = "🏆 THE HORDE IS VANQUISHED!";
+            document.getElementById('status').style.color = "var(--success)";
+            document.getElementById('spellingDisplay').innerText = "DUNGEON CLEARED";
+            setInterfaceDisabled(true);
+            return;
         }
-        document.getElementById('heartsDisplay').innerText = heartsStr;
+
+        document.getElementById('enemyHealth').style.width = "100%";
+        const randomMonsterIdx = Math.floor(Math.random() * monsterSprites.length);
+        document.getElementById('enemyName').innerText = monsterNames[randomMonsterIdx].toUpperCase();
+        document.getElementById('enemySprite').innerText = monsterSprites[randomMonsterIdx];
+
+        const randomIndex = Math.floor(Math.random() * wordsPool.length);
+        currentWord = wordsPool[randomIndex];
+        finalSpelling = "";
+
+        document.getElementById('spellingDisplay').innerText = "---";
+        document.getElementById('status').innerText = "Listening to the whispers...";
+        document.getElementById('status').style.color = "white";
+
+        speak("The incantation is " + currentWord, () => {
+            if(!gameOver && !isTransitioning) {
+                document.getElementById('status').innerText = "Cast your spell! 🎙️";
+                startTimer();
+                startListening();
+            }
+        });
+    }
+
+    function repeatWord() {
+        if(isTransitioning || gameOver) return;
+        safelyStopRecognition(); 
+        
+        speak("The incantation is " + currentWord, () => {
+            if(!gameOver && !isTransitioning) {
+                startListening(); 
+            }
+        });
+    }
+
+    function clearSpelling() {
+        if (gameOver || isTransitioning) return;
+
+        finalSpelling = "";
+        document.getElementById('spellingDisplay').innerText = "---";
+
+        if (recognition) {
+            try { recognition.stop(); } catch(e) {}
+            setTimeout(() => {
+                if (!gameOver && !isTransitioning) {
+                    startListening();
+                }
+            }, 50);
+        }
+    }
+
+    function setInterfaceDisabled(disabled) {
+        document.getElementById('repeatBtn').disabled = disabled;
+        document.getElementById('clearBtn').disabled = disabled;
     }
 
     function startTimer() {
         stopTimer();
         timeLeft = 15;
         document.getElementById('timerDisplay').innerText = timeLeft;
-        
+
         countdownInterval = setInterval(() => {
             timeLeft--;
             document.getElementById('timerDisplay').innerText = timeLeft;
-            
+
             if (timeLeft <= 0) {
                 stopTimer();
-                handleTimeOut();
+                safelyStopRecognition();
+                handleIncorrectTransition("The spell fizzled!");
             }
         }, 1000);
     }
@@ -264,190 +540,168 @@
         if (countdownInterval) clearInterval(countdownInterval);
     }
 
-    function handleTimeOut() {
-        if (gameOver) return;
+    function triggerGameOver() {
+        gameOver = true;
+        stopTimer();
+        safelyStopRecognition();
+        setInterfaceDisabled(true);
+        document.getElementById('status').innerText = "💀 YOU HAVE FALLEN";
+        document.getElementById('status').style.color = "var(--danger)";
+        document.getElementById('spellingDisplay').innerText = "VITALITY DEPLETED";
+    }
+
+    function startListening() {
+        if (gameOver || isTransitioning || !recognition) return;
+        try {
+            recognition.start();
+        } catch(e) {}
+    }
+
+    function safelyStopRecognition() {
+        if (recognition) {
+            try { recognition.stop(); } catch(e) {}
+        }
+    }
+
+    function handleIncorrectTransition(reasonText) {
+        isTransitioning = true;
+        setInterfaceDisabled(true);
         lives--;
         renderHearts();
-        recognition.stop();
+
+        const sprite = document.getElementById('enemySprite');
+        if (sprite) {
+            sprite.classList.add('monster-strike');
+            setTimeout(() => { sprite.classList.remove('monster-strike'); }, 400);
+        }
 
         if (lives <= 0) {
             triggerGameOver();
         } else {
-            document.getElementById('status').innerText = "⏰ TIME OUT! Heart lost. Loading next word.";
-            document.getElementById('spellingDisplay').style.color = "#f44336";
-            speak("Time is up! You lost a heart. Moving to the next word.");
-            
-            setTimeout(nextWord, 5000);
-            setTimeout(startListening, 5500);
+            document.getElementById('status').innerText = `${reasonText} The true word was: ${currentWord.toUpperCase()}`;
+            document.getElementById('status').style.color = "var(--danger)";
+            speak(`Your magic faltered. The rune was ${currentWord}`, () => {
+                setTimeout(nextWord, 1500);
+            });
         }
     }
 
-    function nextWord() {
-        if (gameOver) return;
+    if (recognition) {
+        recognition.onresult = function(event) {
+            if (isTransitioning || gameOver) return;
 
-        if (wordsPool.length === 0) {
-            gameOver = true;
-            stopTimer();
-            document.getElementById('status').innerText = "🏆 VICTORY! You have cleared the dungeon!";
-            document.getElementById('targetSpellDisplay').innerText = "CLEAR";
-            document.getElementById('spellingDisplay').innerText = "VICTORY";
-            document.getElementById('spellingDisplay').style.color = "#4caf50";
-            disableButtons();
-            speak("Congratulations! You have successfully defeated all enemies in this area!");
-            return;
-        }
+            let liveTotalSpelling = "";
 
-        document.getElementById('enemyHealth').style.width = "100%";
+            for (let i = 0; i < event.results.length; i++) {
+                let transcriptChunk = event.results[i][0].transcript.toLowerCase().trim();
+                let spokenParts = transcriptChunk.replace(/[^a-zA-Z ]/g, "").split(/\s+/);
 
-        const randomMonsterIdx = Math.floor(Math.random() * monsterSprites.length);
-        document.getElementById('enemyName').innerText = monsterNames[randomMonsterIdx].toUpperCase();
-        document.getElementById('enemySprite').innerText = monsterSprites[randomMonsterIdx];
-
-        const randomIndex = Math.floor(Math.random() * wordsPool.length);
-        currentWord = wordsPool[randomIndex];
-        finalSpelling = "";
-        
-        document.getElementById('targetSpellDisplay').innerText = currentWord;
-        document.getElementById('spellingDisplay').innerText = "---";
-        document.getElementById('status').innerText = "An enemy approaches! Prepare your spell...";
-        document.getElementById('spellingDisplay').style.color = "#00bcd4"; 
-        
-        speak("Cast your spell!");
-    }
-
-    function repeatWord() {
-        if (gameOver) return;
-        document.getElementById('status').innerText = "Ready to receive incantation...";
-        speak("Read the scroll!");
-    }
-
-    function triggerGameOver() {
-        gameOver = true;
-        stopTimer();
-        document.getElementById('status').innerText = "❌ GAME OVER! You ran out of hearts.";
-        document.getElementById('spellingDisplay').innerText = "GAME OVER";
-        document.getElementById('spellingDisplay').style.color = "#f44336";
-        disableButtons();
-        speak("Game over. Systems powering down.");
-    }
-
-    function disableButtons() { 
-        document.getElementById('repeatBtn').disabled = true;
-        document.getElementById('clearBtn').disabled = true;
-        document.getElementById('skipBtn').disabled = true;
-    }
-
-    function startListening() {
-        if (gameOver) return;
-        
-        document.getElementById('status').innerText = "Listening live... Speak the incantation!";
-        finalSpelling = "";
-        
-        startTimer(); 
-        
-        try {
-            recognition.start();
-        } catch(err) {
-            console.log("Microphone is already active.");
-        }
-    }
-
-    function clearSpelling() {
-        if (gameOver) return;
-        finalSpelling = "";
-        document.getElementById('spellingDisplay').innerText = "---";
-        document.getElementById('spellingDisplay').style.color = "#00bcd4"; 
-        document.getElementById('status').innerText = "Input cleared! Speak clearly now.";
-    }
-
-    // --- AUDIO VALIDATION ENGINE ---
-    recognition.onresult = function(event) {
-        if (gameOver) return;
-        let interimTranscript = "";
-
-        for (let i = event.resultIndex; i < event.results.length; ++i) {
-            let transcriptChunk = event.results[i][0].transcript.toLowerCase();
-            let cleanChunk = transcriptChunk.replace(/[^a-z]/g, "");
-
-            if (event.results[i].isFinal) {
-                finalSpelling += cleanChunk;
-            } else {
-                interimTranscript = cleanChunk;
+                spokenParts.forEach(part => {
+                    if (validLetters[part]) {
+                        liveTotalSpelling += validLetters[part];
+                    } else {
+                        for (let char of part) {
+                            if (char >= 'a' && char <= 'z') {
+                                liveTotalSpelling += char;
+                            }
+                        }
+                    }
+                });
             }
-        }
-
-        let liveTotalSpelling = finalSpelling + interimTranscript;
-        document.getElementById('spellingDisplay').innerText = liveTotalSpelling.split("").join(" ");
-
-        if (liveTotalSpelling === currentWord) {
-            score++;
-            stopTimer();
             
-            const sprite = document.getElementById('enemySprite');
-            sprite.classList.add('monster-hit');
-            setTimeout(() => {
-                sprite.classList.remove('monster-hit');
-            }, 500); 
+            if (liveTotalSpelling.length > 0) {
+                document.getElementById('spellingDisplay').innerText = liveTotalSpelling.split("").join(" ");
+            }
 
-            document.getElementById('enemyHealth').style.width = "0%";
-            
-            document.getElementById('score').innerText = score;
-            document.getElementById('status').innerText = "💥 Critical Hit! Enemy defeated!";
-            document.getElementById('spellingDisplay').style.color = "#4caf50";
-            speak("Target destroyed!");
-            
-            wordsPool = wordsPool.filter(w => w !== currentWord);
-            
-            submitScoreToDjango(score);
-            recognition.stop(); 
-            setTimeout(nextWord, 2000);
-            setTimeout(startListening, 4500); 
-        }
-        else if (liveTotalSpelling.length >= currentWord.length && liveTotalSpelling !== currentWord) {
-            lives--;
-            stopTimer();
-            renderHearts();
-            recognition.stop();
+            if (liveTotalSpelling === currentWord) {
+                isTransitioning = true;
+                stopTimer();
+                safelyStopRecognition();
+                setInterfaceDisabled(true);
 
-            const sprite = document.getElementById('enemySprite');
-            sprite.classList.add('monster-strike');
-            setTimeout(() => {
-                sprite.classList.remove('monster-strike');
-            }, 400);
-
-            if (lives <= 0) {
-                triggerGameOver();
-            } else {
-                document.getElementById('status').innerText = "Wrong spelling! Heart lost. Trying next word.";
-                document.getElementById('spellingDisplay').style.color = "#f44336"; 
-                speak("Not quite. You lost a heart. The correct spelling was " + currentWord.split("").join(" "));
+                score++;
+                document.getElementById('score').innerText = score;
                 
-                setTimeout(nextWord, 5000);
-                setTimeout(startListening, 6500);
-            }
-        }
-    };
+                document.getElementById('status').innerText = "✨ THE BEAST IS BANISHED!";
+                document.getElementById('status').style.color = "var(--success)";
 
-    recognition.onend = function() {
-        if (!gameOver) {
-            console.log("Microphone paused.");
-        }
-    };
+                const sprite = document.getElementById('enemySprite');
+                if (sprite) {
+                    sprite.classList.add('monster-hit');
+                    setTimeout(() => { sprite.classList.remove('monster-hit'); }, 500);
+                }
+                document.getElementById('enemyHealth').style.width = "0%";
+
+                submitScoreToDjango(score);
+
+                wordsPool = wordsPool.filter(w => w !== currentWord);
+                
+                speak("A fatal blow!", () => {
+                    setTimeout(nextWord, 1200);
+                });
+            }
+            else if (liveTotalSpelling.length >= currentWord.length && liveTotalSpelling !== currentWord) {
+                stopTimer();
+                safelyStopRecognition();
+                handleIncorrectTransition("The runes shattered!");
+            }
+        };
+    
+        recognition.onend = function () {
+            if (!gameOver && !isTransitioning) {
+                try { recognition.start(); } catch(e) {}
+            }
+        };
+        
+        recognition.onerror = function(e) {
+            console.error("Speech error processing: ", e.error);
+            safelyStopRecognition();
+        };
+    }
 
     function submitScoreToDjango(currentScore) {
+        const currentDifficulty = typeof selectedDifficultySetting !== 'undefined' ? selectedDifficultySetting : 'easy';
+        
+        const csrfEl = document.querySelector('[name=csrfmiddlewaretoken]');
+        if (!csrfEl) {
+            console.error("Security Halt: CSRF element token verification missing from current DOM context.");
+            return;
+        }
+        const csrftoken = csrfEl.value;
+
         fetch('/api/save-score/', {
             method: 'POST',
-            headers: {
+            headers: { 
                 'Content-Type': 'application/json',
-                'X-CSRFToken': '{{ csrf_token }}'
+                'X-CSRFToken': csrftoken 
             },
-            body: JSON.stringify({ name: '{{ player_name }}', score: currentScore, difficulty: selectedDifficultySetting })
+            body: JSON.stringify({
+                score: currentScore,            
+                difficulty: currentDifficulty   
+            })
         })
-        .then(response => response.json())
-        .then(data => console.log("Score logged:", data))
-        .catch(err => console.error("Database connection failed:", err));
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.status === 'success') {
+                console.log("✨ Score locked into PostgreSQL successfully!");
+            } else {
+                console.error("Database save failed:", data.message);
+            }
+        })
+        .catch(error => {
+            console.error("Error reporting score to server:", error);
+        });
     }
-</script>
 
+    // Auto-initialize setup on layout mount
+    window.onload = function() {
+        startGame();
+    };
+</script>
 </body>
 </html>
