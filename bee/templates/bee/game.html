@@ -73,15 +73,6 @@
             text-shadow: 0 0 20px rgba(200,151,42,.6), 0 0 60px rgba(79,195,247,.3);
         }
 
-        .menu-subtitle {
-            font-family: 'Cinzel', serif; 
-            font-size: .85rem; 
-            color: var(--muted);
-            letter-spacing: 3px; 
-            text-transform: uppercase; 
-            margin-bottom: 35px;
-        }
-
         .stats-row {
             display: flex;
             justify-content: space-between;
@@ -271,7 +262,7 @@
 
 <script>
     /* ==========================================================================
-       DYNAMIC BACKGROUND STARDUST CONTEXT MANAGERS
+       DYNAMIC BACKGROUND STARDUST
        ========================================================================== */
     (function() {
         const c = document.getElementById('stars');
@@ -298,7 +289,7 @@
     })();
 
     /* ==========================================================================
-       GAME STATE DICTIONARIES & CONTROLLERS (100 RPG WORDS PER DIFFICULTY)
+       GAME STATE & LEXICONS
        ========================================================================== */
     const difficultyWords = {
         easy: [
@@ -347,7 +338,6 @@
     
     let wordsPool = [];
     let currentWord = "";
-    let finalSpelling = "";
     
     let score = 0;
     let lives = 3;
@@ -476,7 +466,6 @@
 
         const randomIndex = Math.floor(Math.random() * wordsPool.length);
         currentWord = wordsPool[randomIndex];
-        finalSpelling = "";
 
         document.getElementById('spellingDisplay').innerText = "---";
         document.getElementById('status').innerText = "Listening to the whispers...";
@@ -505,17 +494,13 @@
     function clearSpelling() {
         if (gameOver || isTransitioning) return;
 
-        finalSpelling = "";
         document.getElementById('spellingDisplay').innerText = "---";
-
-        if (recognition) {
-            try { recognition.stop(); } catch(e) {}
-            setTimeout(() => {
-                if (!gameOver && !isTransitioning) {
-                    startListening();
-                }
-            }, 50);
-        }
+        safelyStopRecognition();
+        setTimeout(() => {
+            if (!gameOver && !isTransitioning) {
+                startListening();
+            }
+        }, 50);
     }
 
     function setInterfaceDisabled(disabled) {
@@ -556,9 +541,7 @@
 
     function startListening() {
         if (gameOver || isTransitioning || !recognition) return;
-        try {
-            recognition.start();
-        } catch(e) {}
+        try { recognition.start(); } catch(e) {}
     }
 
     function safelyStopRecognition() {
@@ -595,13 +578,10 @@
             if (isTransitioning || gameOver) return;
 
             let liveTotalSpelling = "";
-            let completeTranscriptRaw = "";
 
             for (let i = 0; i < event.results.length; i++) {
                 let chunk = event.results[i][0].transcript.toLowerCase().trim();
-                completeTranscriptRaw += chunk + " ";
-                
-                let spokenParts = chunk.replace(/[^a-zA-Z -]/g, "").split(/[\s-]+/);
+                let spokenParts = chunk.replace(/[^a-zA-Z ]/g, "").split(/\s+/);
 
                 spokenParts.forEach(part => {
                     if (!part) return;
@@ -610,22 +590,23 @@
                     } else if (wordToLetterMap[part]) {
                         liveTotalSpelling += wordToLetterMap[part];
                     } else {
-                        liveTotalSpelling += part.charAt(0);
+                        // Fallback processing for direct letter capture structures
+                        for (let char of part) {
+                            if (char >= 'a' && char <= 'z') liveTotalSpelling += char;
+                        }
                     }
                 });
             }
             
             liveTotalSpelling = liveTotalSpelling.trim();
-            let rawNormalized = completeTranscriptRaw.replace(/[^a-zA-Z]/g, "").trim();
 
-            // Renders characters spaced nicely
             if (liveTotalSpelling.length > 0) {
                 document.getElementById('spellingDisplay').innerText = liveTotalSpelling.split("").join(" ");
             }
 
-            // SUCCESS GATEWAY: Either character spelling matched OR the engine deciphered it cleanly as a whole-word match
-            if (liveTotalSpelling === currentWord || rawNormalized === currentWord) {
-                isTransitioning = true; // Lock immediately to avoid double firing execution triggers
+            // SUCCESS STATE CHECK
+            if (liveTotalSpelling === currentWord) {
+                isTransitioning = true; 
                 stopTimer();
                 safelyStopRecognition();
                 setInterfaceDisabled(true);
@@ -649,9 +630,11 @@
                 speak("A fatal blow!", () => {
                     setTimeout(nextWord, 1200);
                 });
+                return; // Early terminal exit
             }
-            // EXCEEDED LENGTH FAILURE GATEWAY
-            else if (liveTotalSpelling.length >= currentWord.length && liveTotalSpelling !== currentWord) {
+            
+            // EXCEEDED LENGTH FAILURE GATECHECK
+            if (liveTotalSpelling.length >= currentWord.length && liveTotalSpelling !== currentWord) {
                 isTransitioning = true;
                 stopTimer();
                 safelyStopRecognition();
@@ -673,7 +656,6 @@
 
     function submitScoreToDjango(currentScore) {
         const currentDifficulty = typeof selectedDifficultySetting !== 'undefined' ? selectedDifficultySetting : 'easy';
-        
         const csrfEl = document.querySelector('[name=csrfmiddlewaretoken]');
         if (!csrfEl) {
             console.error("Security Halt: CSRF element token verification missing from current DOM context.");
@@ -693,9 +675,7 @@
             })
         })
         .then(response => {
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
+            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
             return response.json();
         })
         .then(data => {
