@@ -236,6 +236,14 @@
         <button class="action-btn" style="background-color: #3a3f4d; color: #ccc;" onclick="window.location.href='/leaderboard/'">
             LEADERBOARD 🏆
         </button>
+
+        <p style="color:#4caf50; margin-top:15px; font-weight: bold; line-height: 1.5; font-size: 0.95rem;">
+            🎤 Voice Commands:
+            <br>
+            <span style="color: #aaa; font-weight: normal;">"Easy", "Medium", "Hard"</span>
+            <br>
+            <span style="color: #aaa; font-weight: normal;">"Start Game"</span>
+        </p>
     </div>
 
     <div id="gameScreen" class="hidden">
@@ -247,7 +255,6 @@
             <div class="hearts-box" id="heartsDisplay">❤️ ❤️ ❤️</div>
         </div>
 
-        <!-- NEW BATTLE ARENA HUB -->
         <div class="battle-arena">
             <div id="enemyName" class="enemy-name">MINION</div>
             <div class="health-bar-container">
@@ -289,9 +296,9 @@
     function endIntroSequence() {
         const overlay = document.getElementById('introOverlay');
         overlay.style.opacity = '0';
+        
         setTimeout(() => {
             overlay.classList.add('hidden');
-            // Automatically spin up the mic on the menu screen to capture commands
             initMenuVoiceCommands();
         }, 1000);
     }
@@ -313,7 +320,7 @@
     let score = 0;
     let lives = 3;
     let gameOver = false;
-    let gameActive = false; // Track if we are actively playing vs in the menu
+    let gameActive = false;
     let timeLeft = 15;
     let countdownInterval = null;
 
@@ -338,15 +345,57 @@
         speak(`Difficulty set to ${level}`);
     }
 
-    // Command listener for the Main Menu
+    // Dynamic Menu Commands Controller
+    function handleMenuCommand(transcript) {
+        transcript = transcript.toLowerCase().trim();
+        console.log("Menu Command:", transcript);
+
+        // Difficulty selection
+        if (transcript.includes("easy") || transcript.includes("easy mode")) {
+            selectDifficulty("easy");
+            return;
+        }
+        if (transcript.includes("medium") || transcript.includes("normal")) {
+            selectDifficulty("medium");
+            return;
+        }
+        if (transcript.includes("hard") || transcript.includes("hard mode")) {
+            selectDifficulty("hard");
+            return;
+        }
+
+        // Start commands
+        if (
+            transcript.includes("start game") ||
+            transcript.includes("start") ||
+            transcript.includes("play game") ||
+            transcript.includes("play")
+        ) {
+            speak("Starting game");
+            setTimeout(startGame, 1000);
+            return;
+        }
+    }
+
+    // Safe Engine Configurations Setup for Menu Listening
     function initMenuVoiceCommands() {
         gameActive = false;
+
+        recognition.continuous = true;
+        recognition.interimResults = false;
+
         try {
-            recognition.start();
-            console.log("Menu voice commands active.");
-        } catch(e) {
-            console.log("Mic already active.");
-        }
+            recognition.stop();
+        } catch(e) {}
+
+        setTimeout(() => {
+            try {
+                recognition.start();
+                console.log("Menu voice commands active.");
+            } catch(e) {
+                console.log(e);
+            }
+        }, 300);
     }
 
     function startGame() {
@@ -367,7 +416,6 @@
         document.getElementById('menuScreen').classList.add('hidden');
         document.getElementById('gameScreen').classList.remove('hidden');
 
-        // Stop menu tracking temporarily to cleanly cycle the recognition engine
         recognition.stop();
 
         setTimeout(nextWord, 500);
@@ -383,7 +431,7 @@
         document.getElementById('gameScreen').classList.add('hidden');
         document.getElementById('menuScreen').classList.remove('hidden');
         
-        setTimeout(initMenuVoiceCommands, 1000);
+        setTimeout(initMenuVoiceCommands, 500);
     }
 
     function speak(text) {
@@ -497,6 +545,9 @@
     function startListening() {
         if (gameOver) return;
         
+        recognition.continuous = true;
+        recognition.interimResults = true;
+
         document.getElementById('status').innerText = "Listening live... Speak the incantation!";
         finalSpelling = "";
         
@@ -517,38 +568,23 @@
         document.getElementById('status').innerText = "Input cleared! Speak clearly now.";
     }
 
-    // --- VOICESTREAM CONTROL ROUTER ---
+    // --- AUDIO VALIDATION DISPATCH ROUTER ---
     recognition.onresult = function(event) {
-        let rawTranscript = "";
-        for (let i = event.resultIndex; i < event.results.length; ++i) {
-            rawTranscript += event.results[i][0].transcript.toLowerCase();
-        }
-
+        
         // ================= MENU CONTROL ROUTE =================
         if (!gameActive) {
-            console.log("Menu Voice Input:", rawTranscript);
-            
-            if (rawTranscript.includes("easy")) {
-                selectDifficulty("easy");
-                finalSpelling = ""; // Reset tokens
-            } else if (rawTranscript.includes("medium")) {
-                selectDifficulty("medium");
-                finalSpelling = "";
-            } else if (rawTranscript.includes("hard")) {
-                selectDifficulty("hard");
-                finalSpelling = "";
+            let latestTranscript = "";
+            for (let i = event.resultIndex; i < event.results.length; i++) {
+                latestTranscript += event.results[i][0].transcript;
             }
-            
-            if (rawTranscript.includes("start") || rawTranscript.includes("play")) {
-                startGame();
-            }
-            return; // Halt logic here when on the menu
+            handleMenuCommand(latestTranscript);
+            return; 
         }
 
-        // ================= IN-GAME SPELLING ROUTE =================
+        // ================= ACTIVE BATTLE SPELLING ROUTE =================
         if (gameOver) return;
         let interimTranscript = "";
-        finalSpelling = ""; // Re-calculate to match raw streaming structures safely
+        finalSpelling = ""; 
 
         for (let i = event.resultIndex; i < event.results.length; ++i) {
             let transcriptChunk = event.results[i][0].transcript.toLowerCase();
@@ -564,7 +600,9 @@
         let liveTotalSpelling = finalSpelling + interimTranscript;
         document.getElementById('spellingDisplay').innerText = liveTotalSpelling.split("").join(" ");
 
-        if (liveTotalSpelling === currentWord.replace(/[^a-z]/g, "")) {
+        let processedTarget = currentWord.replace(/[^a-z]/g, "");
+
+        if (liveTotalSpelling === processedTarget) {
             score++;
             stopTimer();
             
@@ -585,7 +623,7 @@
             setTimeout(nextWord, 2000);
             setTimeout(startListening, 4500); 
         }
-        else if (liveTotalSpelling.length >= currentWord.replace(/[^a-z]/g, "").length && liveTotalSpelling !== currentWord.replace(/[^a-z]/g, "")) {
+        else if (liveTotalSpelling.length >= processedTarget.length && liveTotalSpelling !== processedTarget) {
             lives--;
             stopTimer();
             renderHearts();
@@ -608,10 +646,16 @@
         }
     };
 
+    // Throttled Automatic Audio Restart Connection Loop
     recognition.onend = function() {
-        // Keeps microphone awake on menu transitions or unexpected timeouts
         if (!gameOver && !gameActive) {
-            try { recognition.start(); } catch(e){}
+            setTimeout(() => {
+                try {
+                    recognition.start();
+                } catch(e) {
+                    console.log("Restart failed", e);
+                }
+            }, 500);
         }
     };
 
