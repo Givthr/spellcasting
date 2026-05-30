@@ -110,11 +110,14 @@
         <h1>SPELLCASTING</h1>
         <p class="menu-subtitle">A Voice-Controlled Spelling Adventure</p>
         
-        <div class="difficulty-section">
-            <div class="difficulty-label">CHOOSE DIFFICULTY:</div>
-            <button class="diff-btn selected" data-diff="easy" onclick="selectDifficulty('easy')">EASY</button>
-            <button class="diff-btn" data-diff="medium" onclick="selectDifficulty('medium')">MEDIUM</button>
-            <button class="diff-btn" data-diff="hard" onclick="selectDifficulty('hard')">HARD</button>
+        <!-- Difficulty choices hidden behind 'START GAME' boundary state selection wrapper, like before -->
+        <div id="difficultyWrapper" class="hidden">
+            <div class="difficulty-section">
+                <div class="difficulty-label">CHOOSE DIFFICULTY:</div>
+                <button class="diff-btn" data-diff="easy" onclick="selectDifficulty('easy')">EASY</button>
+                <button class="diff-btn" data-diff="medium" onclick="selectDifficulty('medium')">MEDIUM</button>
+                <button class="diff-btn" data-diff="hard" onclick="selectDifficulty('hard')">HARD</button>
+            </div>
         </div>
 
         <div style="margin: 20px 0;">
@@ -125,7 +128,8 @@
 
         <div id="status" class="status-box">Waiting for user gesture...</div>
 
-        <button class="action-btn" style="background-color: #b68f40; font-size: 1.5rem; padding: 15px 30px;" onclick="startGame()">
+        <!-- Initial gate trigger button display -->
+        <button id="startTriggerBtn" class="action-btn" style="background-color: #b68f40; font-size: 1.5rem; padding: 15px 30px;" onclick="revealDifficultyOptions()">
             START GAME
         </button>
         <button class="action-btn" style="background-color: #3a3f4d; color: #ccc;" onclick="window.location.href='/my-scores/'">
@@ -138,14 +142,14 @@
         <p style="color:#4caf50; margin-top:15px; font-weight: bold; line-height: 1.5; font-size: 0.95rem;">
             🎤 Menu Voice Commands:
             <br>
-            <span style="color: #aaa; font-weight: normal;">Say: "Easy", "Medium", "Hard", or "Start Game"</span>
+            <span style="color: #aaa; font-weight: normal;">Say: "Start Game" first, then choose: "Easy", "Medium", or "Hard"</span>
         </p>
     </div>
 </div>
 
 <script>
     const video = document.getElementById('introVideo');
-    let selectedDifficultySetting = "easy";
+    let isGameInitiated = false; 
     let shouldMenuRun = false;
     
     const synth = window.speechSynthesis;
@@ -196,8 +200,20 @@
         synth.speak(utterance);
     }
 
+    // Phase 1 Action: Reveal selections area first
+    function revealDifficultyOptions() {
+        isGameInitiated = true;
+        document.getElementById('difficultyWrapper').classList.remove('hidden');
+        document.getElementById('startTriggerBtn').classList.add('hidden'); // Hide entry trigger button safely
+        
+        document.getElementById('status').innerText = "🎙️ Say: 'Easy', 'Medium', or 'Hard' to launch!";
+        speak("Select difficulty setup level.");
+    }
+
+    // Phase 2 Action: Clicking/Speaking a level directly fires the application redirect
     function selectDifficulty(level) {
-        selectedDifficultySetting = level;
+        if (!isGameInitiated) return; // Ignore choices if they haven't targeted 'Start Game' first
+
         document.querySelectorAll('.diff-btn').forEach(btn => {
             if (btn.getAttribute('data-diff') === level) {
                 btn.classList.add('selected');
@@ -205,11 +221,30 @@
                 btn.classList.remove('selected');
             }
         });
-        speak(`Difficulty set to ${level}`);
+
+        speak(`Launching match layout on ${level} difficulty setting`);
+        shouldMenuRun = false;
+        try { menuRecognition.stop(); } catch(e) {}
+        
+        // Pass selections smoothly along to your URL tracking queries configuration directly
+        setTimeout(() => {
+            window.location.href = `/game-arena/?difficulty=${level}`;
+        }, 800);
     }
 
     function handleMenuCommand(transcript) {
         transcript = transcript.toLowerCase().trim();
+
+        // Must hear initialization command sequence first if state tracker flags dead baseline references
+        if (!isGameInitiated) {
+            if (transcript.includes("start") || transcript.includes("play") || transcript.includes("game") || transcript.includes("begin")) {
+                revealDifficultyOptions();
+                return true;
+            }
+            return false;
+        }
+
+        // Difficulty triggers track active selections only after the interface unlocks choices
         if (transcript.includes("easy") || transcript.includes("is he") || transcript.includes("eezi")) { 
             selectDifficulty("easy"); 
             return true; 
@@ -222,11 +257,6 @@
             selectDifficulty("hard"); 
             return true; 
         }
-        if (transcript.includes("start") || transcript.includes("play") || transcript.includes("game") || transcript.includes("begin")) {
-            speak("Starting match");
-            setTimeout(startGame, 600);
-            return true;
-        }
         return false;
     }
 
@@ -238,17 +268,14 @@
             if (!shouldMenuRun) return;
             try {
                 menuRecognition.start();
-                document.getElementById('status').innerText = "🎙️ Menu Mic Active! Say: 'Easy', 'Hard', or 'Start Game'";
+                if(!isGameInitiated) {
+                    document.getElementById('status').innerText = "🎙️ Menu Mic Active! Say: 'Start Game'";
+                } else {
+                    document.getElementById('status').innerText = "🎙️ Choice Active! Say: 'Easy', 'Medium', or 'Hard'";
+                }
                 document.getElementById('status').style.color = "#ffeb3b";
             } catch(e) { console.error("Menu engine restart delay:", e); }
         }, 300);
-    }
-
-    function startGame() {
-        shouldMenuRun = false;
-        try { menuRecognition.stop(); } catch(e) {}
-        // Route directly to your game template path, adding the difficulty parameter
-        window.location.href = `/game/?difficulty=${selectedDifficultySetting}`;
     }
 
     if (menuRecognition) {
