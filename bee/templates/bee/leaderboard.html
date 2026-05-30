@@ -91,12 +91,23 @@
 
     .empty-state { text-align: center; padding: 40px var(--muted); font-style: italic; color: var(--muted); }
     
-    .actions-footer { margin-top: 32px; display: flex; gap: 20px; }
-    .actions-footer a {
-      color: var(--gold-lt); font-family: 'Cinzel', serif; font-size: 0.8rem;
-      letter-spacing: 1.5px; text-decoration: none; text-transform: uppercase;
+    /* Styled Button Navigation System (Matching Scores Page) */
+    .footer-nav { text-align: center; margin-top: 32px; display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+    .btn-nav {
+      display: inline-block; padding: 12px 28px;
+      border: none; border-radius: 8px;
+      font-family: 'Cinzel', serif; font-size: .9rem; font-weight: 600;
+      letter-spacing: 2px; text-transform: uppercase; cursor: pointer; text-decoration: none;
+      transition: transform .15s, box-shadow .15s, filter .15s;
     }
-    .actions-footer a:hover { text-decoration: underline; text-shadow: 0 0 10px rgba(232,184,75,0.3); }
+    .btn-nav:hover { transform: translateY(-2px); filter: brightness(1.08); }
+    .btn-gold {
+      background: linear-gradient(135deg, #B8851E 0%, #D4A030 50%, #B8851E 100%);
+      color: #1A1206; box-shadow: 0 4px 20px rgba(200,151,42,.35);
+    }
+    .btn-dark {
+      background: #2E3A4A; color: var(--text); box-shadow: 0 4px 15px rgba(0,0,0,.3);
+    }
   </style>
 </head>
 <body>
@@ -141,11 +152,11 @@
     {% endfor %}
   </div>
   
-<div class="footer-nav">
+  <div class="footer-nav">
     <a href="/?skip_intro=true" class="btn-nav btn-gold">Back to Menu</a>
     <a href="/my-scores/" class="btn-nav btn-dark">My Scores</a>
   </div>
-</div
+</div>
 
 <script>
   // Tab Switching Framework
