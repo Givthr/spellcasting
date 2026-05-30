@@ -146,29 +146,72 @@
 </div>
 
 <script>
-(function() {
-  const c = document.getElementById('stars');
-  const ctx = c.getContext('2d');
-  let W, H, stars = [];
-  function resize() {
-    W = c.width = window.innerWidth; H = c.height = window.innerHeight;
-    stars = Array.from({length: 180}, () => ({
-      x: Math.random()*W, y: Math.random()*H,
-      r: Math.random()*1.4+.2, a: Math.random(), da: (Math.random()-.5)*.008
-    }));
-  }
-  function draw() {
-    ctx.clearRect(0,0,W,H);
-    stars.forEach(s => {
-      s.a = Math.max(.05, Math.min(1, s.a + s.da));
-      if (s.a <= .05 || s.a >= 1) s.da *= -1;
-      ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, Math.PI*2);
-      ctx.fillStyle = `rgba(200,220,255,${s.a})`; ctx.fill();
-    });
-    requestAnimationFrame(draw);
-  }
-  window.addEventListener('resize', resize); resize(); draw();
-})();
+  (function() {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      console.log("[System] Speech recognition not supported in this browser.");
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    recognition.lang = 'en-US';
+
+    function handleVoiceCommand(transcript) {
+      transcript = transcript.toLowerCase().trim();
+      console.log("[Scores Voice Log Parsing]:", transcript);
+
+      // Match "Back to Menu" variations
+      if (transcript.includes("menu") || transcript.includes("back") || transcript.includes("home")) {
+        console.log("[Navigation] Redirecting to Main Menu...");
+        window.location.href = '/?skip_intro=true';
+        return true;
+      }
+
+      // Match "Leaderboard" variations
+      if (transcript.includes("leaderboard") || transcript.includes("leadership") || transcript.includes("leader")) {
+        console.log("[Navigation] Redirecting to Leaderboard...");
+        window.location.href = '/leaderboard/';
+        return true;
+      }
+      return false;
+    }
+
+    // Automatically start the mic when the page loads
+    function startListening() {
+      try {
+        recognition.start();
+        console.log("[System] Voice command tracking active on Scores page.");
+      } catch(e) {
+        console.error("Mic restart delay:", e);
+      }
+    }
+
+    recognition.onresult = function(event) {
+      let interimTranscript = "";
+      let newlyFinalizedText = "";
+
+      for (let i = event.resultIndex; i < event.results.length; ++i) {
+        let chunk = event.results[i][0].transcript.toLowerCase();
+        if (event.results[i].isFinal) newlyFinalizedText += chunk;
+        else interimTranscript += chunk;
+      }
+      
+      let fullPhrase = (newlyFinalizedText + interimTranscript).trim();
+      if (fullPhrase) {
+        handleVoiceCommand(fullPhrase);
+      }
+    };
+
+    // Keep the mic alive if it times out
+    recognition.onend = function() {
+      setTimeout(startListening, 300);
+    };
+
+    // Auto-engage on layout readiness
+    startListening();
+  })();
 </script>
 </body>
 </html>
