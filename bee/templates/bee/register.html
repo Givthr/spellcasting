@@ -144,7 +144,7 @@
     <div class="error-box">⚠ {{ error }}</div>
     {% endif %}
 
-    <form method="POST">
+    <form method="POST" action="/register/">
       {% csrf_token %}
 
       <div class="field">
