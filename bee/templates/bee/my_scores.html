@@ -127,7 +127,13 @@
   <div class="cards-grid">
     {% for diff in diffs %}
     <div class="card" style="animation-delay: {{ forloop.counter0 }}00ms;">
-      <div class="card-diff card-{{ diff.key }}">{{ diff.label }}</div>
+      <div class="card-diff card-{{ diff.key }}">
+        {% if diff.key == 'easy' %}Novice
+        {% elif diff.key == 'medium' %}Adept
+        {% elif diff.key == 'hard' %}Master
+        {% else %}{{ diff.label }}
+        {% endif %}
+      </div>
       {% if diff.entry %}
       <div class="best-label">Best Score</div>
       <div class="best-score">{{ diff.entry.score }}</div>
