@@ -212,6 +212,50 @@
     // Auto-engage on layout readiness
     startListening();
   })();
+
+    // Ambient Starfield Canvas Renderer Pipeline
+    (function() {
+        const canvas = document.getElementById('stars');
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        let stars = [];
+
+        function resize() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            initStars();
+        }
+
+        function initStars() {
+            stars = [];
+            const count = Math.floor((canvas.width * canvas.height) / 3000);
+            for(let i=0; i<count; i++) {
+                stars.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height,
+                    size: Math.random() * 1.5,
+                    alpha: Math.random(),
+                    speed: 0.005 + Math.random() * 0.015
+                });
+            }
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#ffffff';
+            for(let star of stars) {
+                star.alpha += star.speed;
+                if(star.alpha > 1 || star.alpha < 0) star.speed = -star.speed;
+                ctx.globalAlpha = Math.max(0, star.alpha);
+                ctx.fillRect(star.x, star.y, star.size, star.size);
+            }
+            requestAnimationFrame(draw);
+        }
+
+        window.addEventListener('resize', resize);
+        resize();
+        draw();
+    })();
 </script>
 </body>
 </html>
