@@ -331,6 +331,7 @@
     recognition.continuous = true;
     recognition.interimResults = true;
     recognition.lang = 'en-US';
+    let isMenuMode = true;
 
     function selectDifficulty(level) {
         selectedDifficultySetting = level;
@@ -343,25 +344,29 @@
             }
         });
         speak(`Difficulty set to ${level}`);
+        console.log("[v0] Difficulty selected via voice:", level);
     }
 
     // Dynamic Menu Commands Controller
     function handleMenuCommand(transcript) {
         transcript = transcript.toLowerCase().trim();
-        console.log("Menu Command:", transcript);
+        console.log("[v0] Menu Command Received:", transcript);
 
         // Difficulty selection
         if (transcript.includes("easy") || transcript.includes("easy mode")) {
+            console.log("[v0] Voice command: Easy difficulty selected");
             selectDifficulty("easy");
-            return;
+            return true;
         }
         if (transcript.includes("medium") || transcript.includes("normal")) {
+            console.log("[v0] Voice command: Medium difficulty selected");
             selectDifficulty("medium");
-            return;
+            return true;
         }
         if (transcript.includes("hard") || transcript.includes("hard mode")) {
+            console.log("[v0] Voice command: Hard difficulty selected");
             selectDifficulty("hard");
-            return;
+            return true;
         }
 
         // Start commands
@@ -371,15 +376,20 @@
             transcript.includes("play game") ||
             transcript.includes("play")
         ) {
+            console.log("[v0] Voice command: Start game");
             speak("Starting game");
             setTimeout(startGame, 1000);
-            return;
+            return true;
         }
+        
+        return false;
     }
 
     // Safe Engine Configurations Setup for Menu Listening
     function initMenuVoiceCommands() {
+        console.log("[v0] Initializing menu voice commands");
         gameActive = false;
+        isMenuMode = true;
 
         recognition.continuous = true;
         recognition.interimResults = false;
@@ -391,19 +401,21 @@
         setTimeout(() => {
             try {
                 recognition.start();
-                console.log("Menu voice commands active.");
+                console.log("[v0] Menu voice commands started");
             } catch(e) {
-                console.log(e);
+                console.log("[v0] Menu voice start error:", e);
             }
         }, 300);
     }
 
     function startGame() {
+        console.log("[v0] Starting game with difficulty:", selectedDifficultySetting);
         wordsPool = [...difficultyWords[selectedDifficultySetting]];
         score = 0;
         lives = 3;
         gameOver = false;
         gameActive = true;
+        isMenuMode = false;
         finalSpelling = "";
 
         document.getElementById('score').innerText = score;
@@ -423,8 +435,10 @@
     }
 
     function returnToMenu() {
+        console.log("[v0] Returning to menu");
         stopTimer();
         gameActive = false;
+        isMenuMode = true;
         recognition.stop();
         if (synth.speaking) synth.cancel();
 
@@ -572,12 +586,16 @@
     recognition.onresult = function(event) {
         
         // ================= MENU CONTROL ROUTE =================
-        if (!gameActive) {
+        if (isMenuMode) {
             let latestTranscript = "";
             for (let i = event.resultIndex; i < event.results.length; i++) {
                 latestTranscript += event.results[i][0].transcript;
             }
-            handleMenuCommand(latestTranscript);
+            console.log("[v0] Processing menu voice input:", latestTranscript);
+            const commandHandled = handleMenuCommand(latestTranscript);
+            if (commandHandled) {
+                console.log("[v0] Menu command handled successfully");
+            }
             return; 
         }
 
@@ -648,12 +666,14 @@
 
     // Throttled Automatic Audio Restart Connection Loop
     recognition.onend = function() {
-        if (!gameOver && !gameActive) {
+        console.log("[v0] Recognition ended. isMenuMode:", isMenuMode, "gameActive:", gameActive, "gameOver:", gameOver);
+        if (isMenuMode && !gameOver) {
+            console.log("[v0] Restarting menu voice recognition");
             setTimeout(() => {
                 try {
                     recognition.start();
                 } catch(e) {
-                    console.log("Restart failed", e);
+                    console.log("[v0] Menu restart failed", e);
                 }
             }, 500);
         }
