@@ -1,108 +1,31 @@
-To make `game.html` perfectly match the aesthetic, typography, and styling of `play.html` without merging the screens (keeping `game.html` completely focused on the standalone gameplay screen), we need to update its CSS variables, colors, fonts, buttons, container card shadows, and background stars.
-
-Here is the updated, fully consistent `game.html`:
-
-```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Spellcasting Battle</title>
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&family=Cinzel:wght@600&family=Raleway:wght@400;600;700&display=swap" rel="stylesheet"/>
     <style>
-        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-        /* Matched Theme Color Palettes */
-        :root {
-            --dark-bg:   #1A1E24;
-            --card-bg:   #22272E;
-            --card-border: #2E3A4A;
-            --gold:      #C8972A;
-            --gold-lt:   #E8B84B;
-            --blue-glow: #4FC3F7;
-            --text:      #D0D8E0;
-            --muted:     #7A8A9A;
-            --success:   #81C784;
-            --warning:   #FFB74D;
-            --danger:    #EF5350;
-        }
-
         body {
-            min-height: 100vh;
-            background-color: var(--dark-bg);
-            color: var(--text);
-            font-family: 'Raleway', sans-serif;
+            background-color: #282c34;
+            color: white;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
+            height: 100vh;
             margin: 0;
             overflow: hidden;
         }
-
-        /* Background starfield canvas effect layer */
-        #stars { 
-            position: fixed; 
-            inset: 0; 
-            z-index: 0; 
-            pointer-events: none; 
-        }
-
         .container {
-            position: relative;
-            z-index: 10;
-            background: var(--card-bg);
-            border: 1px solid var(--card-border);
-            padding: 45px;
-            border-radius: 24px;
             text-align: center;
+            background-color: #1e222b;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            max-width: 600px;
             width: 90%;
-            max-width: 650px;
-            box-shadow: 0 0 0 1px rgba(79,195,247,.08), 
-                        0 20px 60px rgba(0,0,0,.6), 
-                        inset 0 1px 0 rgba(255,255,255,.04);
         }
-
-        h1 {
-            font-family: 'Cinzel Decorative', cursive;
-            font-size: clamp(1.8rem, 4vw, 2.6rem);
-            color: var(--gold); 
-            letter-spacing: 4px; 
-            text-transform: uppercase;
-            margin-top: 0;
-            margin-bottom: 25px;
-            text-shadow: 0 0 20px rgba(200,151,42,.6), 0 0 60px rgba(79,195,247,.3);
-        }
-
-        /* Metrics badges row styling matching play.html */
-        .stats-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin: 0 0 30px 0;
-            padding-bottom: 20px;
-            border-bottom: 2px solid rgba(255, 255, 255, 0.05);
-            width: 100%;
-        }
-
-        .stat-badge {
-            background: rgba(0, 0, 0, 0.2);
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-size: 1.1rem;
-            font-weight: 600;
-        }
-
-        .score-box { 
-            color: var(--blue-glow); 
-            font-family: 'Cinzel', serif;
-            text-shadow: 0 0 15px rgba(79,195,247,.4);
-        }
-        .timer-box { color: var(--warning); width: 90px; }
-        .hearts-box { letter-spacing: 2px; }
-
-        /* Battle Arena Layout Styles */
         .battle-arena {
             margin: 20px auto;
             display: flex;
@@ -110,12 +33,11 @@ Here is the updated, fully consistent `game.html`:
             align-items: center;
             justify-content: center;
         }
-        .enemy-name {
-            color: var(--danger);
-            font-weight: bold;
-            font-size: 1.1rem;
-            letter-spacing: 1px;
-            margin-bottom: 5px;
+        .enemy-sprite {
+            font-size: 5rem;
+            min-height: 100px;
+            margin-bottom: 10px;
+            transition: transform 0.2s ease, opacity 0.5s ease;
         }
         .health-bar-container {
             width: 250px;
@@ -129,124 +51,59 @@ Here is the updated, fully consistent `game.html`:
         .health-bar {
             width: 100%;
             height: 100%;
-            background-color: var(--danger); 
+            background-color: #e53935;
             transition: width 0.3s ease-in-out;
         }
-        .enemy-sprite {
-            font-size: 5rem; 
-            min-height: 100px;
-            margin-bottom: 10px;
-            transition: transform 0.2s ease, opacity 0.5s ease;
-        }
-
-        /* Targets Read Aloud Prompt Block Style */
-        .lore-container {
-            background: rgba(0, 0, 0, 0.25);
-            border-left: 3px solid var(--gold);
-            padding: 15px 20px;
-            border-radius: 0 12px 12px 0;
-            margin: 20px 0;
-            text-align: left;
-        }
-        .lore-label {
-            font-size: 0.8rem; 
-            color: var(--muted); 
-            letter-spacing: 2px;
+        .enemy-name {
+            color: #ef5350;
             font-weight: bold;
-        }
-        .target-spell-display {
-            font-family: 'Cinzel', serif;
-            font-size: 2.2rem; 
-            color: var(--gold-lt); 
-            font-weight: bold; 
-            text-transform: uppercase; 
-            margin-top: 5px; 
+            font-size: 1.1rem;
             letter-spacing: 1px;
+            margin-bottom: 5px;
         }
-
-        /* Interaction Status Text Area */
-        .status-box {
-            color: #fff;
-            margin: 15px 0;
-            min-height: 35px;
-            font-size: 1.2rem;
-            font-weight: 500;
-            transition: color 0.2s ease;
-        }
-
-        /* Live Spelling Runes Output Box */
-        .spelling-display {
-            font-size: 3.2rem;
-            font-weight: bold;
-            letter-spacing: 6px;
-            margin: 25px 0;
-            color: var(--blue-glow);
-            min-height: 75px;
-            text-transform: uppercase;
-            word-wrap: break-word;
-            text-shadow: 0 0 15px rgba(79,195,247,.3);
-        }
-
-        /* Primary Actions Layout Grids */
-        .action-layout {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-            margin-top: 25px;
+        h1 { color: #b68f40; font-size: 2.5rem; margin-bottom: 10px; }
+        .stats-row {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            margin: 20px 0;
             width: 100%;
         }
-
+        .score-box { color: #4caf50; font-size: 1.5rem; font-weight: bold; }
+        .timer-box { color: #e53935; font-size: 1.6rem; font-weight: bold; background: #2c1e21; padding: 5px 15px; border-radius: 6px; border: 1px solid #7a2022; }
+        .hearts-box { font-size: 1.8rem; color: #f44336; letter-spacing: 5px; }
+        .status-box { color: #ffeb3b; font-size: 1.2rem; min-height: 40px; margin-bottom: 20px; font-weight: bold; }
+        .spelling-display {
+            font-size: 3rem;
+            letter-spacing: 8px;
+            color: #00bcd4;
+            margin: 30px 0;
+            min-height: 70px;
+            text-transform: uppercase;
+            font-weight: bold;
+        }
         button.action-btn {
-            border: none;
-            padding: 16px 24px;
-            border-radius: 14px;
-            cursor: pointer;
-            font-family: 'Cinzel', serif;
-            font-size: 0.95rem;
-            font-weight: 700;
-            letter-spacing: 1.5px;
-            transition: transform .15s, box-shadow .15s, filter .15s, background .2s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
+            background-color: #4caf50;
             color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 1.2rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.1s;
+            margin: 10px;
+            font-weight: bold;
         }
+        button.action-btn:hover { background-color: #45a049; transform: scale(1.02); }
+        button:disabled { background-color: #555 !important; cursor: not-allowed; transform: none !important; }
 
-        button.action-btn:hover:not(:disabled) {
-            transform: translateY(-2px);
-            filter: brightness(1.08);
-        }
-
-        button.action-btn:active:not(:disabled) {
-            transform: scale(0.98);
-        }
-
-        .btn-retreat {
-            width: 100%; 
-            margin-top: 15px; 
-            background: #2E3A4A; 
-            color: var(--text) !important;
-        }
-
-        button:disabled {
-            background: #2E3A4A !important;
-            color: var(--muted) !important;
-            box-shadow: none !important;
-            cursor: not-allowed;
-            transform: none !important;
-            filter: none !important;
-            opacity: 0.4;
-        }
-
-        /* Animations Matches */
         @keyframes monsterDamage {
             0% { transform: scale(1) translateX(0); filter: brightness(1) drop-shadow(0 0 0 rgba(255,0,0,0)); }
-            15% { transform: scale(1.2) translateX(-10px); filter: brightness(5) drop-shadow(0 0 15px #ff3333); }
-            30% { transform: scale(1) translateX(10px); filter: brightness(5) drop-shadow(0 0 15px #fff); }
-            45% { transform: scale(1.1) translateX(-8px); filter: brightness(3); }
+            15% { transform: scale(1.3) translateX(-10px); filter: brightness(5) drop-shadow(0 0 15px #ff3333); }
+            30% { transform: scale(1.1) translateX(10px); filter: brightness(5) drop-shadow(0 0 15px #fff); }
+            45% { transform: scale(1.2) translateX(-8px); filter: brightness(3); }
             60% { transform: scale(1) translateX(8px); filter: brightness(2); }
-            80% { transform: scale(1.05) translateX(-4px); filter: brightness(1.5); }
+            80% { transform: scale(1.1) translateX(-4px); filter: brightness(1.5); }
             100% { transform: scale(1) translateX(0); filter: brightness(1) drop-shadow(0 0 0 rgba(0,0,0,0)); }
         }
         @keyframes monsterAttack {
@@ -263,16 +120,14 @@ Here is the updated, fully consistent `game.html`:
 </head>
 <body>
 
-<canvas id="stars"></canvas>
-
 <div class="container">
     <div id="gameScreen">
         <h1>SPELLCASTING BATTLE</h1>
         
         <div class="stats-row">
-            <div class="stat-badge score-box">SCORE: <span id="score">0</span></div>
-            <div class="stat-badge timer-box">⏱️ <span id="timerDisplay">15</span>s</div>
-            <div class="stat-badge hearts-box" id="heartsDisplay">❤️ ❤️ ❤️</div>
+            <div class="score-box">MONSTERS DEFEATED: <span id="score">0</span></div>
+            <div class="timer-box">⏱️ <span id="timerDisplay">15</span>s</div>
+            <div class="hearts-box" id="heartsDisplay">❤️ ❤️ ❤️</div>
         </div>
 
         <div class="battle-arena">
@@ -283,54 +138,23 @@ Here is the updated, fully consistent `game.html`:
             <div id="enemySprite" class="enemy-sprite">👻</div>
         </div>
 
-        <div class="lore-container">
-            <div class="lore-label">READ ALOUD TO CAST:</div>
-            <div id="targetSpellDisplay" class="target-spell-display">---</div>
+        <div style="background: #15181f; border: 2px dashed #b68f40; padding: 15px; border-radius: 8px; margin: 15px 0;">
+            <div style="font-size: 0.8rem; color: #aaa; letter-spacing: 2px;">READ ALOUD TO CAST:</div>
+            <div id="targetSpellDisplay" style="font-size: 2.2rem; color: #ffeb3b; font-weight: bold; text-transform: uppercase; margin-top: 5px; letter-spacing: 1px;">---</div>
         </div>
 
         <div id="battleStatus" class="status-box">Preparing spell...</div>
         <div id="spellingDisplay" class="spelling-display">---</div>
 
-        <div class="action-layout">
-            <button class="action-btn" style="background: #512DA8;" id="repeatBtn" onclick="repeatWord()">📖 RECALL CAST</button>
-            <button class="action-btn" style="background: #37474F;" id="clearBtn" onclick="clearSpelling()">✨ DISPEL RUNES</button>
-        </div>
+        <button class="action-btn" style="background-color: #9c27b0;" id="repeatBtn" onclick="repeatWord()">HOW DO I CAST IT?</button>
+        <button class="action-btn" style="background-color: #ff9800;" id="clearBtn" onclick="clearSpelling()">RESET INCANTATION</button>
+        <button class="action-btn" style="background-color: #757575;" id="skipBtn" onclick="nextWord()">FLEE BATTLE</button>
         
-        <div class="action-layout" style="margin-top: 15px;">
-            <button class="action-btn" style="background: #757575;" id="skipBtn" onclick="nextWord()">🏃 FLEE BATTLE</button>
-            <button class="action-btn" style="background: #d32f2f;" id="exitBtn" onclick="returnToMenu()">🚪 RETREAT TO MENU</button>
-        </div>
+        <button class="action-btn" style="background-color: #d32f2f; display: block; margin: 30px auto 0 auto; font-size: 0.9rem; padding: 8px 16px;" id="exitBtn" onclick="returnToMenu()">RETREAT TO MENU</button>
     </div>
 </div>
 
 <script>
-    /* ==========================================================================
-       DYNAMIC BACKGROUND STARDUST CONTEXT MANAGERS
-       ========================================================================== */
-    (function() {
-        const c = document.getElementById('stars');
-        const ctx = c.getContext('2d');
-        let W, H, stars = [];
-        function resize() {
-            W = c.width = window.innerWidth; H = c.height = window.innerHeight;
-            stars = Array.from({length: 180}, () => ({
-                x: Math.random()*W, y: Math.random()*H,
-                r: Math.random()*1.4+.2, a: Math.random(), da: (Math.random()-.5)*.008
-            }));
-        }
-        function draw() {
-            ctx.clearRect(0,0,W,H);
-            stars.forEach(s => {
-                s.a = Math.max(.05, Math.min(1, s.a + s.da));
-                if (s.a <= .05 || s.a >= 1) s.da *= -1;
-                ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, Math.PI*2);
-                ctx.fillStyle = `rgba(200,220,255,${s.a})`; ctx.fill();
-            });
-            requestAnimationFrame(draw);
-        }
-        window.addEventListener('resize', resize); resize(); draw();
-    })();
-
     const difficultyWords = {
         easy: ["lumos", "nox", "incendio", "protego", "silencio", "reducto", "accio", "diffindo", "aguamenti", "evanesco", "imperio", "revelio", "tergeo", "finite", "relashio", "alohomora", "morsmordre", "avis", "crucio", "enervate"],
         medium: ["expecto patronum", "sectumsempra", "expelliarmus", "wingardium leviosa", "arresto momentum", "petrificus totalus", "riddikulus", "confundo", "avada kedavra", "priori incantatem", "legilimens", "obliviate", "cave inimicum", "vade retro", "ignis fatuus", "corpus inane", "magna veritas", "aqua eructo", "salvio hexia", "exura vita"],
@@ -340,6 +164,7 @@ Here is the updated, fully consistent `game.html`:
     const monsterNames = ["Shadow Demon", "Wraith", "Abyssal Ghoul", "Banshee", "Undead Skeleton", "Poltergeist"];
     const monsterSprites = ["👿", "👻", "👹", "💀", "🧛", "🧟"];
 
+    // Read chosen settings out from parameters passed down across paths
     const urlParams = new URLSearchParams(window.location.search);
     let selectedDifficultySetting = urlParams.get('difficulty') || 'easy';
 
@@ -364,6 +189,7 @@ Here is the updated, fully consistent `game.html`:
         battleRecognition.lang = 'en-US';
     }
 
+    // Auto-ignition trigger run sequence inside the gameplay arena boundaries instantly 
     window.onload = function() {
         startGame();
     };
@@ -387,6 +213,7 @@ Here is the updated, fully consistent `game.html`:
         shouldBattleRun = false;
         try { battleRecognition.stop(); } catch(e) {}
         if (synth.speaking) synth.cancel();
+        // Return browser back tracking to your menu endpoint path base
         window.location.href = '/'; 
     }
 
@@ -430,8 +257,7 @@ Here is the updated, fully consistent `game.html`:
             triggerGameOver();
         } else {
             document.getElementById('battleStatus').innerText = "⏰ TIME OUT! Heart lost.";
-            document.getElementById('battleStatus').style.color = "var(--danger)";
-            document.getElementById('spellingDisplay').style.color = "var(--danger)";
+            document.getElementById('spellingDisplay').style.color = "#f44336";
             speak("Time expired!");
             
             setTimeout(nextWord, 3000);
@@ -446,10 +272,9 @@ Here is the updated, fully consistent `game.html`:
             gameOver = true;
             stopTimer();
             document.getElementById('battleStatus').innerText = "🏆 VICTORY! All targets defeated!";
-            document.getElementById('battleStatus').style.color = "var(--success)";
             document.getElementById('targetSpellDisplay').innerText = "CLEAR";
             document.getElementById('spellingDisplay').innerText = "VICTORY";
-            document.getElementById('spellingDisplay').style.color = "var(--success)";
+            document.getElementById('spellingDisplay').style.color = "#4caf50";
             disableButtons();
             speak("Dungeon complete.");
             return;
@@ -467,8 +292,7 @@ Here is the updated, fully consistent `game.html`:
         document.getElementById('targetSpellDisplay').innerText = currentWord;
         document.getElementById('spellingDisplay').innerText = "---";
         document.getElementById('battleStatus').innerText = "An enemy approaches! Cast your spell.";
-        document.getElementById('battleStatus').style.color = "#white";
-        document.getElementById('spellingDisplay').style.color = "var(--blue-glow)"; 
+        document.getElementById('spellingDisplay').style.color = "#00bcd4"; 
         
         speak("Spell sequence " + currentWord);
     }
@@ -483,10 +307,9 @@ Here is the updated, fully consistent `game.html`:
         stopTimer();
         shouldBattleRun = false;
         try { battleRecognition.stop(); } catch(e) {}
-        document.getElementById('battleStatus').innerText = "💀 YOU HAVE FALLEN";
-        document.getElementById('battleStatus').style.color = "var(--danger)";
-        document.getElementById('spellingDisplay').innerText = "VITALITY DEPLETED";
-        document.getElementById('spellingDisplay').style.color = "var(--danger)";
+        document.getElementById('battleStatus').innerText = "❌ GAME OVER!";
+        document.getElementById('spellingDisplay').innerText = "GAME OVER";
+        document.getElementById('spellingDisplay').style.color = "#f44336";
         disableButtons();
         speak("Defeated.");
     }
@@ -497,10 +320,11 @@ Here is the updated, fully consistent `game.html`:
         document.getElementById('skipBtn').disabled = true;
     }
 
+    // Modified this logic so the system automatically clears the display on every new spell attempt
     function startListening() {
         if (gameOver) return;
-        document.getElementById('battleStatus').innerText = "Cast your spell! 🎙️";
-        clearSpelling(); 
+        document.getElementById('battleStatus').innerText = "🎙️ Listening Live... Cast spell!";
+        clearSpelling(); // Automatically flushes input boxes clean when a new word activates
         shouldBattleRun = true;
         startTimer(); 
         try { battleRecognition.start(); } catch(err) {}
@@ -509,7 +333,7 @@ Here is the updated, fully consistent `game.html`:
     function clearSpelling() {
         accumulatedSpelling = "";
         document.getElementById('spellingDisplay').innerText = "---";
-        document.getElementById('spellingDisplay').style.color = "var(--blue-glow)"; 
+        document.getElementById('spellingDisplay').style.color = "#00bcd4"; 
     }
 
     if (battleRecognition) {
@@ -542,9 +366,8 @@ Here is the updated, fully consistent `game.html`:
 
                 document.getElementById('enemyHealth').style.width = "0%";
                 document.getElementById('score').innerText = score;
-                document.getElementById('battleStatus').innerText = "✨ THE BEAST IS BANISHED!";
-                document.getElementById('battleStatus').style.color = "var(--success)";
-                document.getElementById('spellingDisplay').style.color = "var(--success)";
+                document.getElementById('battleStatus').innerText = "💥 Critical Hit! Enemy defeated!";
+                document.getElementById('spellingDisplay').style.color = "#4caf50";
                 speak("Cast complete!");
                 
                 wordsPool = wordsPool.filter(w => w !== currentWord);
@@ -568,9 +391,8 @@ Here is the updated, fully consistent `game.html`:
                 if (lives <= 0) {
                     triggerGameOver();
                 } else {
-                    document.getElementById('battleStatus').innerText = "The runes shattered!";
-                    document.getElementById('battleStatus').style.color = "var(--danger)";
-                    document.getElementById('spellingDisplay').style.color = "var(--danger)"; 
+                    document.getElementById('battleStatus').innerText = "Wrong spelling! Heart lost.";
+                    document.getElementById('spellingDisplay').style.color = "#f44336"; 
                     speak("Interrupted.");
                     
                     setTimeout(nextWord, 3000);
@@ -601,5 +423,3 @@ Here is the updated, fully consistent `game.html`:
 </script>
 </body>
 </html>
-
-```
