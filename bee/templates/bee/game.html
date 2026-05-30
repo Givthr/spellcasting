@@ -468,12 +468,12 @@
         currentWord = wordsPool[randomIndex];
 
         document.getElementById('spellingDisplay').innerText = "---";
-        document.getElementById('status').innerText = "Listening to the whispers...";
+        document.getElementById('status').innerText = "Listening to the Talking Tome...";
         document.getElementById('status').style.color = "white";
 
         speak("The incantation is " + currentWord, () => {
             if(!gameOver && !isTransitioning) {
-                document.getElementById('status').innerText = "Cast your spell! 🎙️";
+                document.getElementById('status').innerText = "Spell your spell! 🎙️";
                 startTimer();
                 startListening();
             }
@@ -565,9 +565,9 @@
         if (lives <= 0) {
             triggerGameOver();
         } else {
-            document.getElementById('status').innerText = `${reasonText} The true word was: ${currentWord.toUpperCase()}`;
+            document.getElementById('status').innerText = `${reasonText} The true incantation was: ${currentWord.toUpperCase()}`;
             document.getElementById('status').style.color = "var(--danger)";
-            speak(`Your magic faltered. The rune was ${currentWord}`, () => {
+            speak(`Your magic faltered. The incantation was ${currentWord}`, () => {
                 setTimeout(nextWord, 1500);
             });
         }
