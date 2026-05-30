@@ -391,7 +391,6 @@
         "z":"z", "zee":"z", "zed":"z"
     };
 
-    // Homophone dictionary map to correct common whole-word interpretations into letters
     const wordToLetterMap = {
         "for": "f", "four": "f", "to": "t", "too": "t", "two": "t", "see": "c", "sea": "c",
         "bee": "b", "be": "b", "are": "r", "our": "r", "you": "u", "why": "y", "oh": "o", "know": "n", "no": "n"
@@ -596,39 +595,37 @@
             if (isTransitioning || gameOver) return;
 
             let liveTotalSpelling = "";
+            let completeTranscriptRaw = "";
 
             for (let i = 0; i < event.results.length; i++) {
-                let transcriptChunk = event.results[i][0].transcript.toLowerCase().trim();
+                let chunk = event.results[i][0].transcript.toLowerCase().trim();
+                completeTranscriptRaw += chunk + " ";
                 
-                // Splitting incoming structures by spaces and standard text hyphens
-                let spokenParts = transcriptChunk.replace(/[^a-zA-Z -]/g, "").split(/[\s-]+/);
+                let spokenParts = chunk.replace(/[^a-zA-Z -]/g, "").split(/[\s-]+/);
 
                 spokenParts.forEach(part => {
                     if (!part) return;
-
-                    // 1. Direct Phonetic Mapping Matching (e.g. "jay" -> "j")
                     if (validLetters[part]) {
                         liveTotalSpelling += validLetters[part];
-                    } 
-                    // 2. Homophone Replacement Matching (e.g. "sea" -> "c")
-                    else if (wordToLetterMap[part]) {
+                    } else if (wordToLetterMap[part]) {
                         liveTotalSpelling += wordToLetterMap[part];
-                    } 
-                    // 3. Absolute Fallback: Capture only the first character if a full word slip occurs
-                    else {
+                    } else {
                         liveTotalSpelling += part.charAt(0);
                     }
                 });
             }
             
             liveTotalSpelling = liveTotalSpelling.trim();
+            let rawNormalized = completeTranscriptRaw.replace(/[^a-zA-Z]/g, "").trim();
 
+            // Renders characters spaced nicely
             if (liveTotalSpelling.length > 0) {
                 document.getElementById('spellingDisplay').innerText = liveTotalSpelling.split("").join(" ");
             }
 
-            if (liveTotalSpelling === currentWord) {
-                isTransitioning = true;
+            // SUCCESS GATEWAY: Either character spelling matched OR the engine deciphered it cleanly as a whole-word match
+            if (liveTotalSpelling === currentWord || rawNormalized === currentWord) {
+                isTransitioning = true; // Lock immediately to avoid double firing execution triggers
                 stopTimer();
                 safelyStopRecognition();
                 setInterfaceDisabled(true);
@@ -647,14 +644,15 @@
                 document.getElementById('enemyHealth').style.width = "0%";
 
                 submitScoreToDjango(score);
-
                 wordsPool = wordsPool.filter(w => w !== currentWord);
                 
                 speak("A fatal blow!", () => {
                     setTimeout(nextWord, 1200);
                 });
             }
+            // EXCEEDED LENGTH FAILURE GATEWAY
             else if (liveTotalSpelling.length >= currentWord.length && liveTotalSpelling !== currentWord) {
+                isTransitioning = true;
                 stopTimer();
                 safelyStopRecognition();
                 handleIncorrectTransition("The runes shattered!");
