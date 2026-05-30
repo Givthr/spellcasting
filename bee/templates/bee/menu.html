@@ -172,28 +172,33 @@
     
     video.onended = function() { endIntroSequence(); };
 
-    function endIntroSequence() {
-        const overlay = document.getElementById('introOverlay');
-        overlay.style.opacity = '0';
-        
-        navigator.mediaDevices.getUserMedia({ audio: true })
-            .then(function(stream) {
-                console.log("[System] Microphone authorized.");
-                stream.getTracks().forEach(track => track.stop());
-                
-                setTimeout(() => {
-                    overlay.classList.add('hidden');
-                    initMenuVoiceCommands(); 
-                }, 400);
-            })
-            .catch(function(err) {
-                console.error("[System] Microphone permission denied:", err);
-                overlay.classList.add('hidden');
-                document.getElementById('status').innerText = "❌ Microphone Blocked! Check browser settings.";
-                document.getElementById('status').style.color = "#f44336";
-            });
+  function endIntroSequence() {
+    // 1. Instantly mute and pause the intro video
+    if (video) {
+        video.muted = true;
+        video.pause();
     }
 
+    const overlay = document.getElementById('introOverlay');
+    overlay.style.opacity = '0';
+    
+    navigator.mediaDevices.getUserMedia({ audio: true })
+        .then(function(stream) {
+            console.log("[System] Microphone authorized.");
+            stream.getTracks().forEach(track => track.stop());
+            
+            setTimeout(() => {
+                overlay.classList.add('hidden');
+                initMenuVoiceCommands(); 
+            }, 400);
+        })
+        .catch(function(err) {
+            console.error("[System] Microphone permission denied:", err);
+            overlay.classList.add('hidden');
+            document.getElementById('status').innerText = "❌ Microphone Blocked! Check browser settings.";
+            document.getElementById('status').style.color = "#f44336";
+        });
+}
     function speak(text) {
         if (synth.speaking) synth.cancel();
         const utterance = new SpeechSynthesisUtterance(text);
