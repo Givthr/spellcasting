@@ -165,10 +165,101 @@
     document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
     document.querySelectorAll('.leaderboard-panel').forEach(panel => panel.classList.remove('active'));
     
-    // Highlight selected properties
-    event.currentTarget.classList.add('active');
-    document.getElementById(`panel-${difficulty}`).classList.add('active');
+    // Fallback assignment to support programmatic/voice triggers where event target isn't present
+    const matchingBtn = Array.from(document.querySelectorAll('.tab-btn')).find(btn => 
+      btn.getAttribute('onclick').includes(`'${difficulty}'`)
+    );
+    
+    if (matchingBtn) {
+      matchingBtn.classList.add('active');
+    }
+    
+    const targetPanel = document.getElementById(`panel-${difficulty}`);
+    if (targetPanel) {
+      targetPanel.classList.add('active');
+    }
   }
+
+  // --- NEW: Voice Navigation Script ---
+  (function() {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      console.log("[System] Speech recognition not supported in this browser.");
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    recognition.lang = 'en-US';
+
+    function handleVoiceCommand(transcript) {
+      transcript = transcript.toLowerCase().trim();
+      console.log("[Leaderboard Voice Log Parsing]:", transcript);
+
+      // 1. Page Redirections
+      if (transcript.includes("menu") || transcript.includes("back") || transcript.includes("home")) {
+        console.log("[Navigation] Redirecting to Main Menu...");
+        window.location.href = '/?skip_intro=true';
+        return true;
+      }
+      if (transcript.includes("scores") || transcript.includes("score")) {
+        console.log("[Navigation] Redirecting to My Scores page...");
+        window.location.href = '/my-scores/';
+        return true;
+      }
+
+      // 2. In-Page Tab Arena Controls
+      if (transcript.includes("easy") || transcript.includes("is he") || transcript.includes("eezi")) {
+        console.log("[Tab Control] Swapped to Easy Arena via voice");
+        switchTab('easy');
+        return true;
+      }
+      if (transcript.includes("medium") || transcript.includes("normal") || transcript.includes("mid")) {
+        console.log("[Tab Control] Swapped to Medium Arena via voice");
+        switchTab('medium');
+        return true;
+      }
+      if (transcript.includes("hard") || transcript.includes("heart") || transcript.includes("art")) {
+        console.log("[Tab Control] Swapped to Hard Arena via voice");
+        switchTab('hard');
+        return true;
+      }
+      return false;
+    }
+
+    function startListening() {
+      try {
+        recognition.start();
+        console.log("[System] Voice command tracking active on Leaderboard page.");
+      } catch(e) {
+        console.error("Mic restart delay:", e);
+      }
+    }
+
+    recognition.onresult = function(event) {
+      let interimTranscript = "";
+      let newlyFinalizedText = "";
+
+      for (let i = event.resultIndex; i < event.results.length; ++i) {
+        let chunk = event.results[i][0].transcript.toLowerCase();
+        if (event.results[i].isFinal) newlyFinalizedText += chunk;
+        else interimTranscript += chunk;
+      }
+      
+      let fullPhrase = (newlyFinalizedText + interimTranscript).trim();
+      if (fullPhrase) {
+        handleVoiceCommand(fullPhrase);
+      }
+    };
+
+    recognition.onend = function() {
+      setTimeout(startListening, 300);
+    };
+
+    // Auto-engage mic loop
+    startListening();
+  })();
 
   // Parallax Cosmic Particle Layer
   (function() {
