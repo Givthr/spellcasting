@@ -36,7 +36,8 @@
             align-items: center;
             justify-content: center;
             margin: 0;
-            overflow: hidden;
+            overflow: auto;
+            padding: 20px 0;
         }
 
         #stars { 
@@ -51,7 +52,7 @@
             z-index: 10;
             background: var(--card-bg);
             border: 1px solid var(--card-border);
-            padding: 45px 40px;
+            padding: 25px 40px; 
             border-radius: 24px;
             text-align: center;
             width: 90%;
@@ -61,14 +62,13 @@
                         inset 0 1px 0 rgba(255,255,255,.04);
             transition: transform 0.3s ease;
         }
-
         /* Unified Header Style */
         .site-title {
             font-family: 'Cinzel Decorative', cursive;
             font-size: clamp(1.8rem, 4vw, 2.6rem);
             color: var(--gold); letter-spacing: 4px;
             text-transform: uppercase; 
-            margin-bottom: 25px; 
+            margin-bottom: 15px; 
             animation: titlePulse 3s ease-in-out infinite;
         }
         @keyframes titlePulse {
@@ -85,8 +85,8 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin: 0 0 25px 0;
-            padding-bottom: 20px;
+            margin: 0 0 15px 0;
+            padding-bottom: 15px;
             border-bottom: 1px solid rgba(255, 255, 255, 0.05);
         }
 
@@ -108,16 +108,16 @@
         .hearts-box { letter-spacing: 2px; }
 
         .battle-arena {
-            margin: 20px auto;
+            margin: 10px auto;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
         }
         .enemy-sprite {
-            font-size: 5rem; 
-            min-height: 100px;
-            margin-bottom: 10px;
+            font-size: 4.5rem; 
+            min-height: 80px;
+            margin-bottom: 5px;
             transition: transform 0.2s ease, opacity 0.5s ease;
         }
         .health-bar-container {
@@ -216,9 +216,9 @@
             font-size: clamp(2rem, 5vw, 3.2rem);
             font-weight: bold;
             letter-spacing: 6px;
-            margin: 20px 0 35px 0;
+            margin: 15px 0 20px 0; 
             color: var(--blue-glow);
-            min-height: 75px;
+            min-height: 60px;
             text-transform: uppercase;
             word-wrap: break-word;
             text-shadow: 0 0 15px rgba(79,195,247,.3);
