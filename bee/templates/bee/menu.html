@@ -271,7 +271,7 @@
     const video = document.getElementById('introVideo');
     let isGameInitiated = false; 
     let shouldMenuRun = false;
-    let menuAuthTimeout = null; 
+    let isRecognitionActive = false; // Track explicit engine status to prevent collision errors
 
     // Ambient Starfield Canvas Renderer Pipeline
     (function() {
@@ -329,6 +329,25 @@
         menuRecognition.continuous = true;
         menuRecognition.interimResults = true;
         menuRecognition.lang = 'en-US';
+
+        // Manage our status flag using native engine hooks
+        menuRecognition.onstart = function() {
+            isRecognitionActive = true;
+            console.log("[System] Speech recognition engine active.");
+        };
+        
+        menuRecognition.onend = function() {
+            isRecognitionActive = false;
+            console.log("[System] Speech recognition engine went offline.");
+            // Keep it alive if we are still on the menu screen
+            if (shouldMenuRun) {
+                setTimeout(() => { 
+                    if (shouldMenuRun && !isRecognitionActive) {
+                        try { menuRecognition.start(); } catch(e) {} 
+                    }
+                }, 300);
+            }
+        };
     } else {
         alert("Web Speech API recognition is unavailable. Please run on Google Chrome or Edge.");
     }
@@ -382,23 +401,26 @@
         const lore = document.getElementById('loreWrapper');
         if (lore) lore.classList.add('hidden');
         
+        document.getElementById('status').innerText = "📖 Which arena do you wish to enter?";
+        document.getElementById('status').style.color = "#ffeb3b";
+
         speak("Which arena do you wish to enter?");
         
-        initMenuVoiceCommands();
+        if (!isRecognitionActive) {
+            try { menuRecognition.start(); } catch(e) {}
+        }
     }
 
     function selectDifficulty(level) {
         if (synth.speaking) synth.cancel();
 
         shouldMenuRun = false;
-        if (menuAuthTimeout) clearTimeout(menuAuthTimeout);
-
         if (menuRecognition) {
             try {
                 menuRecognition.onresult = null;
                 menuRecognition.onend = null;
                 menuRecognition.stop();
-                console.log("[System] Menu recognition forcefully terminated.");
+                console.log("[System] Menu recognition permanently terminated for navigation.");
             } catch(e) { console.error(e); }
         }
 
@@ -452,37 +474,18 @@
 
     function initMenuVoiceCommands() {
         shouldMenuRun = true;
-        
-        // Clear any dangling timers from an early screen-skip click
-        if (menuAuthTimeout) clearTimeout(menuAuthTimeout);
 
-        try { menuRecognition.stop(); } catch(e) {}
+        if (!isGameInitiated) {
+            const line1 = "I am the Talking Tome, a tome automaton - an automatome!";
+            const line2 = "A magical auditory and verbal connection between us has been established. Are you ready to enter the Arena?";            
+            document.getElementById('status').innerHTML = "📖 " + line1 + "<br>" + line2;
+            speak(line1 + " " + line2);
+            document.getElementById('status').style.color = "#ffeb3b";
+        }
 
-        setTimeout(() => {
-            if (!shouldMenuRun) return;
-            try {
-                if (!isGameInitiated) {
-                    const line1 = "I am the Talking Tome, a tome automaton - an automatome!";
-                    const line2 = "A magical auditory and verbal connection between us has been established. Are you ready to enter the Arena?";            
-                    document.getElementById('status').innerHTML = "📖 " + line1 + "<br>" + line2;
-                    speak(line1 + " " + line2);
-                    
-                    document.getElementById('status').style.color = "#ffeb3b";
-
-                    // Store the timeout reference
-                    menuAuthTimeout = setTimeout(() => {
-                        if (shouldMenuRun && !isGameInitiated) {
-                            try { menuRecognition.start(); } catch(e) {}
-                        }
-                    }, 8500);
-                } else {
-                    // Instantly drop straight into capturing the difficulty selections
-                    document.getElementById('status').innerText = "🎙️ Choice Active! Say 'Novice', 'Adept', or 'Master'";
-                    document.getElementById('status').style.color = "#ffeb3b";
-                    try { menuRecognition.start(); } catch(e) {}
-                }
-            } catch(e) { console.error("Menu engine restart delay:", e); }
-        }, 300);
+        if (menuRecognition && !isRecognitionActive) {
+            try { menuRecognition.start(); } catch(e) { console.error("Immediate recognition startup failed:", e); }
+        }
     }
 
     if (menuRecognition) {
@@ -508,12 +511,6 @@
                 if (handleMenuCommand(fullMenuPhrase)) {
                     lastCommandTimestamp = currentResultTimestamp; 
                 }
-            }
-        };
-
-        menuRecognition.onend = function() {
-            if (shouldMenuRun) {
-                setTimeout(() => { try { menuRecognition.start(); } catch(e) {} }, 300);
             }
         };
     }
