@@ -454,7 +454,7 @@
         "b":"b", "be":"b", "bee":"b",
         "c":"c", "see":"c", "sea":"c",
         "d":"d", "dee":"d",
-        "e":"e",
+        "e":"e", "ih":"e",
         "f":"f", "ef":"f",
         "g":"g", "jee":"g",
         "h":"h", "aitch":"h",
@@ -469,13 +469,13 @@
         "q":"q", "queue":"q",
         "r":"r", "are":"r", "our":"r",
         "s":"s", "ess":"s",
-        "t":"t", "tea":"t", "tee":"t",
+        "t":"t", "tea":"t", "tee":"t", "chi":"t", "chee":"t",
         "u":"u", "you":"u",
         "v":"v", "vee":"v",
         "w":"w", "doubleyou":"w",
         "x":"x", "ex":"x",
         "y":"y", "why":"y",
-        "z":"z", "zee":"z", "zed":"z"
+        "z":"z", "zee":"z", "zed":"z", "zay":"z",
     };
 
     const wordToLetterMap = {
@@ -666,6 +666,7 @@
         const spellingEl = document.getElementById('spellingDisplay');
         spellingEl.classList.add('message-mode');
         spellingEl.innerText = "VITALITY DEPLETED";
+        speak("A fatal mistake. Did our magical connection flicker? A misspelling, perhaps? A mishap! But I digress. Do not despair—mending shattered spellcasters is my expertise. You have been resurrected, fresh and entirely intact. Try not to choke on your words next time.");
     }
 
     function startListening() {
@@ -692,21 +693,25 @@
         multiplier = 1;
         updateMultiplierUI();
 
+        stopTimer();
+        safelyStopRecognition();
+
         const sprite = document.getElementById('enemySprite');
         if (sprite) {
             sprite.classList.add('monster-strike');
             setTimeout(() => { sprite.classList.remove('monster-strike'); }, 400);
         }
 
-        if (lives <= 0) {
-            triggerGameOver();
-        } else {
-            document.getElementById('status').innerText = `${reasonText} The true incantation was: ${currentWord.toUpperCase()}`;
-            document.getElementById('status').style.color = "var(--danger)";
-            speak(`Cat got your tongue? The incantation was ${currentWord}`, () => {
+        document.getElementById('status').innerText = `${reasonText} The true incantation was: ${currentWord.toUpperCase()}`;
+        document.getElementById('status').style.color = "var(--danger)";
+    
+        speak(`Cat got your tongue? The incantation was ${currentWord}`, () => {
+            if (lives <= 0) {
+                setTimeout(triggerGameOver, 1000);
+            } else {
                 setTimeout(nextWord, 1500);
-            });
-        }
+            }
+        });
     }
 
     if (recognition) {
