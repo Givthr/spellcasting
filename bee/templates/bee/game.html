@@ -168,6 +168,40 @@
         .monster-hit { animation: monsterDamage 0.5s ease-in-out forwards; }
         .monster-strike { animation: monsterAttack 0.4s ease-in-out forwards; }
 
+        /* --- 1. Dynamic Theme Overrides --- */
+        .container.theme-evoker {
+            --blue-glow: #EF5350; /* Intense Destruction Crimson */
+            border-color: rgba(239, 83, 80, 0.4);
+        }
+        .container.theme-warlock {
+            --blue-glow: #A855F7; /* Affliction Shadow Purple */
+            border-color: rgba(168, 85, 247, 0.4);
+        }
+        .container.theme-paladin {
+            --blue-glow: #FFB74D; /* Righteous Radiant Gold */
+            border-color: rgba(255, 183, 77, 0.4);
+        }
+        
+        /* --- 2. Visual Listening Feedback (Mana Aura) --- */
+        @keyframes auraPulse {
+            0%, 100% { box-shadow: 0 0 1px rgba(79,195,247,.08), 0 20px 60px rgba(0,0,0,.6), 0 0 15px var(--blue-glow); }
+            50% { box-shadow: 0 0 1px rgba(79,195,247,.08), 0 20px 60px rgba(0,0,0,.6), 0 0 35px var(--blue-glow); }
+        }
+        .container.listening {
+            animation: auraPulse 1.8s infinite ease-in-out;
+            border-color: var(--blue-glow) !important;
+        }
+        
+        /* --- 3. Combo Multiplier (Mana Surge Visuals) --- */
+        @keyframes surgeShake {
+            0%, 100% { transform: scale(1.02); }
+            50% { transform: scale(1.04); filter: brightness(1.15); }
+        }
+        .container.mana-surge {
+            animation: surgeShake 1s infinite ease-in-out, auraPulse 0.5s infinite ease-in-out;
+            border: 2px solid var(--blue-glow) !important;
+        }
+
         .status-box {
             color: #fff;
             margin: 15px 0;
@@ -259,7 +293,10 @@
         <div class="site-title">Spellcasting</div>
 
         <div class="stats-row">
-            <div class="stat-badge score-box">SCORE: <span id="score">0</span></div>
+            <div class="stat-badge score-box">
+                SCORE: <span id="score">0</span> 
+                <span id="multDisplay" style="color: var(--warning); font-size: 0.85rem; margin-left: 6px; display: none; font-family: 'Cinzel', serif; font-weight: bold;"></span>
+            </div>
             <div class="stat-badge timer-box">⏱️ <span id="timerDisplay">15</span>s</div>
             <div class="stat-badge hearts-box" id="heartsDisplay">❤️ ❤️ ❤️</div>
         </div>
@@ -321,7 +358,7 @@
     /* ==========================================================================
        GAME STATE & DICTIONARIES
        ========================================================================== */
-        const difficultyWords = {
+    const difficultyWords = {
         // 3 to 5 Letters
         easy: [
             // --- EVOKER (Destruction) ---
@@ -360,6 +397,34 @@
         ]
     };
 
+    // Flat taxonomy arrays used to quickly check what theme style to paint on the DOM
+    const archetypes = {
+        evoker: [
+            "fire", "zap", "bolt", "burn", "arc", "ray", "shock", "flare", "spark", "beam", 
+            "blaze", "volt", "acid", "surge", "flash", "melt", "burst", "erupt", "blast", "boom",
+            "ignite", "thunder", "scorch", "tempest", "vortex", "meteor", "barrage", "bombard", "explode", "rupture", 
+            "implode", "blizzard", "eruption", "vaporize", "dissolve", "liquefy", "combust", "detonate", "inferno", "shatter",
+            "conflagration", "obliteration", "devastation", "annihilation", "electrocution", "disintegration", "cataclysm", "apocalypse", "armageddon", "maelstrom", 
+            "singularity", "incineration", "immolation", "thunderbolt", "firestorm", "supernova", "bombardment", "liquefaction", "pulverization", "combustion"
+        ],
+        warlock: [
+            "hex", "rot", "curse", "drain", "taint", "bane", "agony", "choke", "toxin", "sting", 
+            "lash", "haunt", "gouge", "venom", "spite", "leech", "bile", "vile", "reap", "rip",
+            "blight", "plague", "wither", "fester", "poison", "stifle", "corrupt", "torment", "afflict", "vitiate", 
+            "inflict", "despoil", "profane", "smother", "anguish", "mortify", "subvert", "strangle", "necrosis", "cripple",
+            "malediction", "imprecation", "putrefaction", "decomposition", "exsanguination", "enervation", "defilement", "infestation", "debilitation", "enslavement", 
+            "pestilence", "corruption", "vilification", "desecration", "suffocation", "strangulation", "mutilation", "depravation", "devitalization", "extinction"
+        ],
+        paladin: [
+            "smite", "purge", "scour", "wrath", "light", "brand", "doom", "holy", "zeal", "force", 
+            "crush", "smash", "blind", "flay", "glare", "judge", "fury", "pure", "clean", "quell",
+            "cleanse", "purging", "hallow", "condemn", "crusade", "justice", "chastise", "rebuke", "sunbeam", "moonbeam", 
+            "exorcise", "scourge", "execrate", "censure", "punish", "judgment", "radiant", "divine", "avenging", "penalize",
+            "purification", "consecration", "sanctification", "righteousness", "illumination", "condemnation", "extermination", "retribution", "castigation", "vindication", 
+            "inquisition", "damnation", "excommunication", "decimation", "subjugation", "persecution", "execution", "chastisement", "admonition", "proscription"
+        ]
+    };
+        
     const monsterNames = ["Infernal Devil", "Wraith", "Abyssal Demon", "Skeleton", "Vampire", "Zombie"];
     const monsterSprites = ["👿", "👻", "👹", "💀", "🧛", "🧟"];
 
@@ -371,6 +436,8 @@
     
     let score = 0;
     let lives = 3;
+    let comboCount = 0;
+    let multiplier = 1;
     let gameOver = false;
     let isTransitioning = false; 
 
@@ -466,9 +533,13 @@
         gameOver = false;
         isTransitioning = false;
 
+        comboCount = 0;
+        multiplier = 1;
+        updateMultiplierUI();
+        document.querySelector('.container').classList.remove('theme-evoker', 'theme-warlock', 'theme-paladin', 'mana-surge');
+
         document.getElementById('score').innerText = score;
         renderHearts();
-
         document.getElementById('spellingDisplay').classList.remove('message-mode');
 
         setInterfaceDisabled(false);
@@ -500,6 +571,18 @@
 
         const randomIndex = Math.floor(Math.random() * wordsPool.length);
         currentWord = wordsPool[randomIndex];
+        
+        // DYNAMIC UI THEME SHIFT: Check the current active dictionary archetype
+        const container = document.querySelector('.container');
+        container.classList.remove('theme-evoker', 'theme-warlock', 'theme-paladin');
+        
+        if (archetypes.evoker.includes(currentWord)) {
+            container.classList.add('theme-evoker');
+        } else if (archetypes.warlock.includes(currentWord)) {
+            container.classList.add('theme-warlock');
+        } else if (archetypes.paladin.includes(currentWord)) {
+            container.classList.add('theme-paladin');
+        }
 
         document.getElementById('spellingDisplay').innerText = "---";
         document.getElementById('status').innerText = "Listening to the Talking Tome...";
@@ -527,14 +610,24 @@
 
     function clearSpelling() {
         if (gameOver || isTransitioning) return;
-
+    
         document.getElementById('spellingDisplay').innerText = "---";
         safelyStopRecognition();
-        setTimeout(() => {
-            if (!gameOver && !isTransitioning) {
-                startListening();
-            }
-        }, 50);
+    }
+
+    // Helper UI update utility
+    function updateMultiplierUI() {
+        const el = document.getElementById('multDisplay');
+        const container = document.querySelector('.container');
+        
+        if (multiplier > 1) {
+            el.innerText = multiplier === 3 ? `x${multiplier} SURGE!` : `x${multiplier}`;
+            el.style.display = 'inline';
+            el.style.color = multiplier === 3 ? 'var(--danger)' : 'var(--warning)';
+        } else {
+            el.style.display = 'none';
+            container.classList.remove('mana-surge');
+        }
     }
 
     function setInterfaceDisabled(disabled) {
@@ -577,13 +670,17 @@
 
     function startListening() {
         if (gameOver || isTransitioning || !recognition) return;
-        try { recognition.start(); } catch(e) {}
+        try { 
+            recognition.start(); 
+            document.querySelector('.container').classList.add('listening');
+        } catch(e) {}
     }
 
     function safelyStopRecognition() {
         if (recognition) {
             try { recognition.stop(); } catch(e) {}
         }
+        document.querySelector('.container').classList.remove('listening');
     }
 
     function handleIncorrectTransition(reasonText) {
@@ -591,6 +688,9 @@
         setInterfaceDisabled(true);
         lives--;
         renderHearts();
+        comboCount = 0;
+        multiplier = 1;
+        updateMultiplierUI();
 
         const sprite = document.getElementById('enemySprite');
         if (sprite) {
@@ -649,7 +749,18 @@
                 safelyStopRecognition();
                 setInterfaceDisabled(true);
 
-                score++;
+                comboCount++;
+                if (comboCount >= 6) {
+                    multiplier = 3;
+                    document.querySelector('.container').classList.add('mana-surge');
+                } else if (comboCount >= 3) {
+                    multiplier = 2;
+                } else {
+                    multiplier = 1;
+                }
+                updateMultiplierUI();
+            
+                score += multiplier;
                 document.getElementById('score').innerText = score;
                 
                 document.getElementById('status').innerText = "✨ THE MONSTER IS DEFEATED!";
@@ -688,6 +799,16 @@
         
         recognition.onerror = function(e) {
             console.error("Speech error processing: ", e.error);
+            
+            // Check for terminal security or hardware blocks
+            if (e.error === 'not-allowed' || e.error === 'service-not-allowed') {
+                gameOver = true;
+                stopTimer();
+                setInterfaceDisabled(true);
+                document.getElementById('status').innerText = "🎙️ Connection Lost: Microphone Access Denied.";
+                document.getElementById('status').style.color = "var(--danger)";
+            }
+            
             safelyStopRecognition();
         };
     }
