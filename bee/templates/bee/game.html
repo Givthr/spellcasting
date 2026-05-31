@@ -647,7 +647,7 @@
             if (timeLeft <= 0) {
                 stopTimer();
                 safelyStopRecognition();
-                handleIncorrectTransition("The spell fizzled!");
+                handleIncorrectTransition("Cat got your tongue?");
             }
         }, 1000);
     }
@@ -666,7 +666,7 @@
         const spellingEl = document.getElementById('spellingDisplay');
         spellingEl.classList.add('message-mode');
         spellingEl.innerText = "VITALITY DEPLETED";
-        speak("A fatal mistake. Did our magical connection flicker? A misspelling, perhaps? A mishap! But I digress. Do not despair—mending shattered spellcasters is my expertise. You have been resurrected, fresh and entirely intact. Try not to choke on your words next time.");
+        speak("A fatal mistake. Did our magical connection flicker? A misspelling perhaps? A mishap! Do not despair. Mending shattered spellcasters is my expertise. You have been resurrected. Try not to choke on your words next time.");
     }
 
     function startListening() {
