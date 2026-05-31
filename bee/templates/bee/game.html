@@ -321,46 +321,46 @@
     /* ==========================================================================
        GAME STATE & DICTIONARIES
        ========================================================================== */
-    const difficultyWords = {
+        const difficultyWords = {
+        // 3 to 5 Letters
         easy: [
-            "fire", "ice", "hex", "cast", "zap", "bolt", "burn", "slam", "whip", "jab",
-            "stun", "daze", "flame", "boil", "arc", "ray", "smite", "slash", "stab", "shock",
-            "hurl", "lash", "blast", "chop", "melt", "bite", "claw", "hack", "tear", "rend",
-            "flare", "spark", "beam", "slay", "ruin", "doom", "void", "dark", "pain", "sun",
-            "dawn", "dusk", "moon", "star", "nova", "gash", "sear", "bash", "maul", "kill",
-            "nuke", "wilt", "scald", "singe", "curse", "smash", "crush", "break", "split", "burst",
-            "erupt", "frost", "chill", "wind", "gale", "gust", "dust", "flay", "gouge", "strike",
-            "blaze", "ash", "magma", "pyre", "volt", "acid", "toxic", "venom", "smog", "mist",
-            "hail", "snow", "rain", "storm", "surge", "flash", "fang", "bone", "blood", "gore",
-            "chomp", "stomp", "punch", "drown", "choke", "bleed", "rot", "rust", "decay", "char"
+            // --- EVOKER (Destruction) ---
+            "fire", "zap", "bolt", "burn", "arc", "ray", "shock", "flare", "spark", "beam", 
+            "blaze", "volt", "acid", "surge", "flash", "melt", "burst", "erupt", "blast", "boom",
+            // --- WARLOCK (Affliction / Shadow) ---
+            "hex", "rot", "curse", "drain", "taint", "bane", "agony", "choke", "toxin", "sting", 
+            "lash", "haunt", "gouge", "venom", "spite", "leech", "bile", "vile", "reap", "rip",
+            // --- CLERIC / PALADIN (Exorcism / Holy Wrath) ---
+            "smite", "purge", "scour", "wrath", "light", "brand", "doom", "holy", "zeal", "force", 
+            "crush", "smash", "blind", "flay", "glare", "judge", "fury", "pure", "clean", "quell"
         ],
+        // 6 to 8 Letters
         medium: [
-            "punish", "pummel", "cleave", "pierce", "ignite", "freeze", "shatter", "thunder", "poison", "scorch",
-            "destroy", "batter", "cripple", "sunder", "impale", "skewer", "kindle", "blister", "shadow", "nether",
-            "arcane", "mystic", "astral", "cosmic", "radiant", "divine", "devour", "consume", "immolate", "deluge",
-            "cyclone", "tornado", "tempest", "vortex", "meteor", "eclipse", "smolder", "trample", "vanquish", "abyssal",
-            "infernal", "radiate", "barrage", "bombard", "cascade", "explode", "rupture", "implode", "banish", "execute",
-            "hellfire", "wildfire", "blizzard", "eruption", "massacre", "butcher", "throttle", "behead", "decimate", "atomize",
-            "vaporize", "dissolve", "liquefy", "petrify", "lacerate", "puncture", "demolish", "dynamite", "submerge", "engulf",
-            "smother", "bludgeon", "crucify", "torture", "sunlight", "ravage", "amputate", "mutilate", "backstab", "headshot",
-            "asphyxia", "corrode", "oxidize", "combust", "detonate", "stampede", "typhoon", "tsunami", "mudslide", "rockfall",
-            "sinkhole", "firefall", "sunbeam", "moonbeam", "starfall", "darkstar", "firebolt", "icestorm", "sunburst", "moonfall"
+            // --- EVOKER (Destruction) ---
+            "ignite", "thunder", "scorch", "tempest", "vortex", "meteor", "barrage", "bombard", "explode", "rupture", 
+            "implode", "blizzard", "eruption", "vaporize", "dissolve", "liquefy", "combust", "detonate", "inferno", "shatter",
+            // --- WARLOCK (Affliction / Shadow) ---
+            "blight", "plague", "wither", "fester", "poison", "stifle", "corrupt", "torment", "afflict", "vitiate", 
+            "inflict", "despoil", "profane", "smother", "anguish", "mortify", "subvert", "strangle", "necrosis", "cripple",
+            // --- CLERIC / PALADIN (Exorcism / Holy Wrath) ---
+            "cleanse", "purging", "hallow", "condemn", "crusade", "justice", "chastise", "rebuke", "sunbeam", "moonbeam", 
+            "exorcise", "scourge", "execrate", "censure", "punish", "judgment", "radiant", "divine", "avenging", "penalize"
         ],
+        // 9+ Letters
         hard: [
-            "conflagration", "obliteration", "devastation", "annihilation", "electrocution", "asphyxiation", "strangulation", "decapitation", "disintegration", "cataclysm",
-            "apocalypse", "armageddon", "maelstrom", "singularity", "hemorrhage", "laceration", "mutilation", "evisceration", "excruciation", "sacrifice",
-            "eradication", "extermination", "assassination", "incineration", "vivisection", "immolation", "exsanguinate", "pulverization", "liquefaction", "electrocute",
-            "thunderbolt", "lightning", "firestorm", "avalanche", "earthquake", "hurricane", "superstorm", "thunderstorm", "bloodstrike", "skullcrusher",
-            "spinebreaker", "bonecrusher", "heartseeker", "soulreaper", "voidbringer", "doomhammer", "deathstrike", "venomstrike", "froststrike", "stormstrike",
-            "shadowstrike", "flamestrike", "earthshatter", "mindflayer", "meteorstrike", "spellstrike", "bloodbath", "defenestration", "guillotine", "crucifixion",
-            "slaughterhouse", "bloodspatter", "dismemberment", "suffocation", "incinerator", "atomization", "vaporization", "frostbite", "decimation", "destruction",
-            "pyrostorm", "cryostorm", "electrostorm", "darkmatter", "supernova", "solarflare", "permafrost", "flashfreeze", "bloodcurse", "nightterror",
-            "spellshock", "deathbringer", "lightbringer", "painbringer", "blightbringer", "doomweaver", "soulstealer", "lifedrainer", "bloodsucker", "fleshrender",
-            "bonebreaker", "necksnapper", "backbreaker", "skullsplitter", "gutwrencher", "throatcutter", "blooddrinker", "brainmelter", "fleshpeeler", "soulcrusher"
+            // --- EVOKER (Destruction) ---
+            "conflagration", "obliteration", "devastation", "annihilation", "electrocution", "disintegration", "cataclysm", "apocalypse", "armageddon", "maelstrom", 
+            "singularity", "incineration", "immolation", "thunderbolt", "firestorm", "supernova", "bombardment", "liquefaction", "pulverization", "combustion",
+            // --- WARLOCK (Affliction / Shadow) ---
+            "malediction", "imprecation", "putrefaction", "decomposition", "exsanguination", "enervation", "defilement", "infestation", "debilitation", "enslavement", 
+            "pestilence", "corruption", "vilification", "desecration", "suffocation", "strangulation", "mutilation", "depravation", "devitalization", "extinction",
+            // --- CLERIC / PALADIN (Exorcism / Holy Wrath) ---
+            "purification", "consecration", "sanctification", "righteousness", "illumination", "condemnation", "extermination", "retribution", "castigation", "vindication", 
+            "inquisition", "damnation", "excommunication", "decimation", "subjugation", "persecution", "execution", "chastisement", "admonition", "proscription"
         ]
     };
 
-    const monsterNames = ["Shadow Demon", "Wraith", "Abyssal Ghoul", "Banshee", "Undead Skeleton", "Poltergeist"];
+    const monsterNames = ["Infernal Devil", "Wraith", "Abyssal Demon", "Skeleton", "Vampire", "Zombie"];
     const monsterSprites = ["👿", "👻", "👹", "💀", "🧛", "🧟"];
 
     const urlParams = new URLSearchParams(window.location.search);
