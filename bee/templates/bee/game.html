@@ -51,7 +51,7 @@
             z-index: 10;
             background: var(--card-bg);
             border: 1px solid var(--card-border);
-            padding: 45px;
+            padding: 45px 40px;
             border-radius: 24px;
             text-align: center;
             width: 90%;
@@ -62,30 +62,38 @@
             transition: transform 0.3s ease;
         }
 
-        h1 {
+        /* Unified Header Style */
+        .site-title {
             font-family: 'Cinzel Decorative', cursive;
             font-size: clamp(1.8rem, 4vw, 2.6rem);
-            color: var(--gold); 
-            letter-spacing: 4px; 
-            text-transform: uppercase;
-            margin-top: 0;
-            margin-bottom: 6px;
-            text-shadow: 0 0 20px rgba(200,151,42,.6), 0 0 60px rgba(79,195,247,.3);
+            color: var(--gold); letter-spacing: 4px;
+            text-transform: uppercase; margin-bottom: 4px;
+            animation: titlePulse 3s ease-in-out infinite;
+        }
+        @keyframes titlePulse {
+            0%,100% { text-shadow: 0 0 20px rgba(200,151,42,.6), 0 0 60px rgba(79,195,247,.25); }
+            50%     { text-shadow: 0 0 35px rgba(200,151,42,.9), 0 0 90px rgba(79,195,247,.5); }
+        }
+        .site-sub {
+            font-family: 'Cinzel', serif; font-size: .85rem;
+            color: var(--muted); letter-spacing: 3px;
+            text-transform: uppercase; margin-bottom: 30px;
         }
 
         .stats-row {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin: 0 0 30px 0;
+            margin: 0 0 25px 0;
             padding-bottom: 20px;
-            border-bottom: 2px solid rgba(255, 255, 255, 0.05);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
         }
 
         .stat-badge {
-            background: rgba(0, 0, 0, 0.2);
-            padding: 8px 16px;
-            border-radius: 20px;
+            background: rgba(0, 0, 0, 0.25);
+            padding: 10px 18px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.03);
             font-size: 1.1rem;
             font-weight: 600;
         }
@@ -95,7 +103,7 @@
             font-family: 'Cinzel', serif;
             text-shadow: 0 0 15px rgba(79,195,247,.4);
         }
-        .timer-box { color: var(--warning); width: 90px; }
+        .timer-box { color: var(--warning); width: 95px; }
         .hearts-box { letter-spacing: 2px; }
 
         .battle-arena {
@@ -114,24 +122,27 @@
         .health-bar-container {
             width: 250px;
             height: 16px;
-            background-color: #3a3f4d;
+            background-color: #1A1E24;
             border-radius: 8px;
-            border: 2px solid #555;
+            border: 1px solid rgba(255,255,255,0.1);
             overflow: hidden;
             margin-bottom: 15px;
+            box-shadow: inset 0 2px 5px rgba(0,0,0,0.5);
         }
         .health-bar {
             width: 100%;
             height: 100%;
-            background-color: #e53935; 
+            background: linear-gradient(90deg, #b71c1c 0%, #e53935 100%); 
             transition: width 0.3s ease-in-out;
         }
         .enemy-name {
-            color: #ef5350;
+            color: var(--danger);
+            font-family: 'Cinzel', serif;
             font-weight: bold;
-            font-size: 1.1rem;
-            letter-spacing: 1px;
-            margin-bottom: 5px;
+            font-size: 1.2rem;
+            letter-spacing: 2px;
+            margin-bottom: 8px;
+            text-shadow: 0 0 10px rgba(239, 83, 80, 0.4);
         }
 
         @keyframes monsterDamage {
@@ -160,16 +171,17 @@
             color: #fff;
             margin: 15px 0;
             min-height: 35px;
-            font-size: 1.2rem;
+            font-size: 1.1rem;
             font-weight: 500;
+            letter-spacing: 1px;
             transition: color 0.2s ease;
         }
 
         .spelling-display {
-            font-size: 3.2rem;
+            font-size: clamp(2rem, 5vw, 3.2rem);
             font-weight: bold;
             letter-spacing: 6px;
-            margin: 30px 0;
+            margin: 20px 0 35px 0;
             color: var(--blue-glow);
             min-height: 75px;
             text-transform: uppercase;
@@ -177,46 +189,60 @@
             text-shadow: 0 0 15px rgba(79,195,247,.3);
         }
 
+        /* Unified Button Layout */
         .action-layout {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 15px;
-            margin-top: 25px;
+            margin-top: 15px;
         }
 
-        button.action-btn {
-            border: none;
-            padding: 16px 24px;
-            border-radius: 14px;
-            cursor: pointer;
-            font-family: 'Cinzel', serif;
-            font-size: 0.95rem;
-            font-weight: 700;
-            letter-spacing: 1.5px;
-            transition: transform .15s, box-shadow .15s, filter .15s, background .2s;
-            display: flex;
+        .btn {
+            display: inline-flex;
             align-items: center;
             justify-content: center;
+            padding: 14px 20px;
+            border: none;
+            border-radius: 8px;
+            font-family: 'Cinzel', serif;
+            font-size: 0.9rem;
+            font-weight: 600;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            cursor: pointer;
+            text-decoration: none;
+            transition: transform .15s, box-shadow .15s, filter .15s;
             gap: 8px;
+            width: 100%;
         }
 
-        button.action-btn:hover:not(:disabled) {
-            transform: translateY(-2px);
-            filter: brightness(1.08);
+        .btn:hover:not(:disabled) { transform: translateY(-2px); filter: brightness(1.1); }
+        .btn:active:not(:disabled) { transform: scale(0.98); }
+
+        .btn-magic {
+            background: linear-gradient(135deg, #4b367c 0%, #512DA8 100%);
+            color: #FFF; box-shadow: 0 4px 15px rgba(81, 45, 168, 0.3);
+        }
+        
+        .btn-dark {
+            background: #2E3A4A; color: var(--text); 
+            box-shadow: 0 4px 15px rgba(0,0,0,.3); 
+            border: 1px solid rgba(255,255,255,0.05);
         }
 
-        button.action-btn:active:not(:disabled) {
-            transform: scale(0.98);
+        .btn-danger {
+            background: linear-gradient(135deg, #7f2b2b 0%, #b73838 100%);
+            color: #FFF; box-shadow: 0 4px 15px rgba(183, 56, 56, 0.2);
         }
 
-        button:disabled {
+        .btn:disabled {
             background: #2E3A4A !important;
             color: var(--muted) !important;
             box-shadow: none !important;
+            border: none !important;
             cursor: not-allowed;
             transform: none !important;
-            filter: none !important;
-            opacity: 0.4;
+            filter: grayscale(1) opacity(0.5) !important;
         }
     </style>
 </head>
@@ -228,6 +254,10 @@
 
 <div class="container">
     <div id="gameScreen">
+        
+        <div class="site-title">Spellcasting</div>
+        <div class="site-sub">Active Combat Arena</div>
+
         <div class="stats-row">
             <div class="stat-badge score-box">SCORE: <span id="score">0</span></div>
             <div class="stat-badge timer-box">⏱️ <span id="timerDisplay">15</span>s</div>
@@ -246,15 +276,15 @@
         <div id="spellingDisplay" class="spelling-display">---</div>
 
         <div class="action-layout">
-            <button class="action-btn" id="repeatBtn" style="background:#512DA8; color: white;" onclick="repeatWord()">
-                📖 RECALL INCANTATION
+            <button class="btn btn-magic" id="repeatBtn" onclick="repeatWord()">
+                📖 Recall
             </button>
-            <button class="action-btn" id="clearBtn" style="background: #37474F; color: white;" onclick="clearSpelling()">
-                ✨ DISPEL RUNES
+            <button class="btn btn-dark" id="clearBtn" onclick="clearSpelling()">
+                ✨ Dispel
             </button>
         </div>
 
-        <button class="action-btn" id="exitBtn" style="width: 100%; margin-top: 15px; background: #2E3A4A; color: var(--text);" onclick="exitToMenu()">
+        <button class="btn btn-danger" id="exitBtn" style="margin-top: 15px;" onclick="exitToMenu()">
             🚪 RETREAT TO BASE
         </button>
     </div>
