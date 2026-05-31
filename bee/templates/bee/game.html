@@ -603,7 +603,7 @@
         } else {
             document.getElementById('status').innerText = `${reasonText} The true incantation was: ${currentWord.toUpperCase()}`;
             document.getElementById('status').style.color = "var(--danger)";
-            speak(`Your magic faltered. The incantation was ${currentWord}`, () => {
+            speak(`Cat got your tongue? The incantation was ${currentWord}`, () => {
                 setTimeout(nextWord, 1500);
             });
         }
@@ -652,7 +652,7 @@
                 score++;
                 document.getElementById('score').innerText = score;
                 
-                document.getElementById('status').innerText = "✨ THE BEAST IS BANISHED!";
+                document.getElementById('status').innerText = "✨ THE MONSTER IS DEFEATED!";
                 document.getElementById('status').style.color = "var(--success)";
 
                 const sprite = document.getElementById('enemySprite');
