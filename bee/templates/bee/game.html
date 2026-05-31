@@ -67,19 +67,20 @@
             font-family: 'Cinzel Decorative', cursive;
             font-size: clamp(1.8rem, 4vw, 2.6rem);
             color: var(--gold); letter-spacing: 4px;
-            text-transform: uppercase; margin-bottom: 4px;
+            text-transform: uppercase; 
+            margin-bottom: 25px; 
             animation: titlePulse 3s ease-in-out infinite;
         }
         @keyframes titlePulse {
             0%,100% { text-shadow: 0 0 20px rgba(200,151,42,.6), 0 0 60px rgba(79,195,247,.25); }
             50%     { text-shadow: 0 0 35px rgba(200,151,42,.9), 0 0 90px rgba(79,195,247,.5); }
         }
-        .site-sub {
-            font-family: 'Cinzel', serif; font-size: .85rem;
-            color: var(--muted); letter-spacing: 3px;
-            text-transform: uppercase; margin-bottom: 30px;
+        
+        .spelling-display.message-mode {
+            font-size: clamp(1.5rem, 4vw, 2.2rem);
+            letter-spacing: 2px;
         }
-
+        
         .stats-row {
             display: flex;
             justify-content: space-between;
@@ -256,7 +257,6 @@
     <div id="gameScreen">
         
         <div class="site-title">Spellcasting</div>
-        <div class="site-sub">Active Combat Arena</div>
 
         <div class="stats-row">
             <div class="stat-badge score-box">SCORE: <span id="score">0</span></div>
@@ -469,6 +469,8 @@
         document.getElementById('score').innerText = score;
         renderHearts();
 
+        document.getElementById('spellingDisplay').classList.remove('message-mode');
+
         setInterfaceDisabled(false);
         nextWord();
     }
@@ -484,7 +486,9 @@
             safelyStopRecognition();
             document.getElementById('status').innerText = "🏆 THE HORDE IS VANQUISHED!";
             document.getElementById('status').style.color = "var(--success)";
-            document.getElementById('spellingDisplay').innerText = "DUNGEON CLEARED";
+            const spellingEl = document.getElementById('spellingDisplay');
+            spellingEl.classList.add('message-mode');
+            spellingEl.innerText = "DUNGEON CLEARED";
             setInterfaceDisabled(true);
             return;
         }
@@ -566,7 +570,9 @@
         setInterfaceDisabled(true);
         document.getElementById('status').innerText = "💀 YOU HAVE FALLEN";
         document.getElementById('status').style.color = "var(--danger)";
-        document.getElementById('spellingDisplay').innerText = "VITALITY DEPLETED";
+        const spellingEl = document.getElementById('spellingDisplay');
+        spellingEl.classList.add('message-mode');
+        spellingEl.innerText = "VITALITY DEPLETED";
     }
 
     function startListening() {
