@@ -271,6 +271,7 @@
     const video = document.getElementById('introVideo');
     let isGameInitiated = false; 
     let shouldMenuRun = false;
+    let menuAuthTimeout = null; 
 
     // Ambient Starfield Canvas Renderer Pipeline
     (function() {
@@ -338,33 +339,33 @@
     
     video.onended = function() { endIntroSequence(); };
 
-  function endIntroSequence() {
-    // 1. Instantly mute and pause the intro video
-    if (video) {
-        video.muted = true;
-        video.pause();
+    function endIntroSequence() {
+        if (video) {
+            video.muted = true;
+            video.pause();
+        }
+
+        const overlay = document.getElementById('introOverlay');
+        overlay.style.opacity = '0';
+        
+        navigator.mediaDevices.getUserMedia({ audio: true })
+            .then(function(stream) {
+                console.log("[System] Microphone authorized.");
+                stream.getTracks().forEach(track => track.stop());
+                
+                setTimeout(() => {
+                    overlay.classList.add('hidden');
+                    initMenuVoiceCommands(); 
+                }, 400);
+            })
+            .catch(function(err) {
+                console.error("[System] Microphone permission denied:", err);
+                overlay.classList.add('hidden');
+                document.getElementById('status').innerText = "❌ Microphone Blocked! Check browser settings.";
+                document.getElementById('status').style.color = "#f44336";
+            });
     }
 
-    const overlay = document.getElementById('introOverlay');
-    overlay.style.opacity = '0';
-    
-    navigator.mediaDevices.getUserMedia({ audio: true })
-        .then(function(stream) {
-            console.log("[System] Microphone authorized.");
-            stream.getTracks().forEach(track => track.stop());
-            
-            setTimeout(() => {
-                overlay.classList.add('hidden');
-                initMenuVoiceCommands(); 
-            }, 400);
-        })
-        .catch(function(err) {
-            console.error("[System] Microphone permission denied:", err);
-            overlay.classList.add('hidden');
-            document.getElementById('status').innerText = "❌ Microphone Blocked! Check browser settings.";
-            document.getElementById('status').style.color = "#f44336";
-        });
-}
     function speak(text) {
         if (synth.speaking) synth.cancel();
         const utterance = new SpeechSynthesisUtterance(text);
@@ -381,15 +382,17 @@
         const lore = document.getElementById('loreWrapper');
         if (lore) lore.classList.add('hidden');
         
-        document.getElementById('status').innerText = "📖 Which arena do you wish to enter?";
         speak("Which arena do you wish to enter?");
+        
+        initMenuVoiceCommands();
     }
 
     function selectDifficulty(level) {
-        // Kill background voice synthesis to keep navigation channels completely clear
         if (synth.speaking) synth.cancel();
 
         shouldMenuRun = false;
+        if (menuAuthTimeout) clearTimeout(menuAuthTimeout);
+
         if (menuRecognition) {
             try {
                 menuRecognition.onresult = null;
@@ -408,8 +411,6 @@
         });
 
         console.log(`[Navigation] Redirecting to /game-arena/?difficulty=${level}`);
-        
-        // CRUCIAL TRICK: Fixed slash configuration matching your strict Django urls.py routes setup
         window.location.href = `/game-arena/?difficulty=${level}`;
     }
 
@@ -418,15 +419,13 @@
         console.log("[Menu Voice Log Parsing]:", transcript);
         
         if (transcript.includes("scores") || transcript.includes("score")) {
-        console.log("[Navigation] Redirecting to /my-scores/");
-        window.location.href = '/my-scores/';
-        return true;
-    }
-    if (transcript.includes("leaderboard") || transcript.includes("leadership") || transcript.includes("leader")) {
-        console.log("[Navigation] Redirecting to /leaderboard/");
-        window.location.href = '/leaderboard/';
-        return true;
-    }
+            window.location.href = '/my-scores/';
+            return true;
+        }
+        if (transcript.includes("leaderboard") || transcript.includes("leadership") || transcript.includes("leader")) {
+            window.location.href = '/leaderboard/';
+            return true;
+        }
 
         if (!isGameInitiated) {
             if (transcript.includes("start") || transcript.includes("play") || transcript.includes("game") || transcript.includes("begin")) {
@@ -453,32 +452,35 @@
 
     function initMenuVoiceCommands() {
         shouldMenuRun = true;
+        
+        // Clear any dangling timers from an early screen-skip click
+        if (menuAuthTimeout) clearTimeout(menuAuthTimeout);
+
         try { menuRecognition.stop(); } catch(e) {}
 
         setTimeout(() => {
             if (!shouldMenuRun) return;
             try {
-                if(!isGameInitiated) {
+                if (!isGameInitiated) {
                     const line1 = "I am the Talking Tome, a tome automaton - an automatome!";
                     const line2 = "A magical auditory and verbal connection between us has been established. Are you ready to enter the Arena?";            
                     document.getElementById('status').innerHTML = "📖 " + line1 + "<br>" + line2;
                     speak(line1 + " " + line2);
-                } else {
-                    document.getElementById('status').innerText = "🎙️ Choice Active! Say 'Novice', 'Adept', or 'Master'";
-                }
-                
-                document.getElementById('status').style.color = "#ffeb3b";
+                    
+                    document.getElementById('status').style.color = "#ffeb3b";
 
-                if (!isGameInitiated) {
-                    setTimeout(() => {
+                    // Store the timeout reference
+                    menuAuthTimeout = setTimeout(() => {
                         if (shouldMenuRun && !isGameInitiated) {
                             try { menuRecognition.start(); } catch(e) {}
                         }
                     }, 8500);
                 } else {
-                    menuRecognition.start();
+                    // Instantly drop straight into capturing the difficulty selections
+                    document.getElementById('status').innerText = "🎙️ Choice Active! Say 'Novice', 'Adept', or 'Master'";
+                    document.getElementById('status').style.color = "#ffeb3b";
+                    try { menuRecognition.start(); } catch(e) {}
                 }
-    
             } catch(e) { console.error("Menu engine restart delay:", e); }
         }, 300);
     }
@@ -497,14 +499,12 @@
             let fullMenuPhrase = (newlyFinalizedText + interimTranscript).trim();
             
             if (fullMenuPhrase) {
-                // Ignore trailing vocal feedback echoes processed immediately during phase shifts
                 if (isGameInitiated && (currentResultTimestamp - lastCommandTimestamp < 1000)) {
                     console.log("[Anti-Echo Shield] Wiped trailing buffer text link: ", fullMenuPhrase);
                     return;
                 }
 
                 document.getElementById('status').innerText = `🎙️ Heard: "${fullMenuPhrase}"`;
-                
                 if (handleMenuCommand(fullMenuPhrase)) {
                     lastCommandTimestamp = currentResultTimestamp; 
                 }
@@ -517,19 +517,15 @@
             }
         };
     }
+
     window.addEventListener('DOMContentLoaded', () => {
-    const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.get('skip_intro') === 'true') {
-        console.log("[System] skip_intro parameter detected. Bypassing sequence.");
-        // Immediately clear overlay layout rules
-        const overlay = document.getElementById('introOverlay');
-        if (overlay) {
-            overlay.style.display = 'none';
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('skip_intro') === 'true') {
+            const overlay = document.getElementById('introOverlay');
+            if (overlay) { overlay.style.display = 'none'; }
+            endIntroSequence();
         }
-        // Trigger system initialization without video delays
-        endIntroSequence();
-    }
-});
+    });
 </script>
 </body>
 </html>
