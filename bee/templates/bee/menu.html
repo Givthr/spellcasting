@@ -318,7 +318,7 @@
     })();
     
     // Safety tracking timestamp base
-    let lastCommandTimestamp = Date.now();
+    let lastCommandTimestamp = performance.now();
 
     const synth = window.speechSynthesis;
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -394,16 +394,17 @@
 
     function revealDifficultyOptions() {
         isGameInitiated = true;
+        lastCommandTimestamp = performance.now();
         
         document.getElementById('difficultyWrapper').classList.remove('hidden');
         document.getElementById('startTriggerBtn').classList.add('hidden');
-
+    
         const lore = document.getElementById('loreWrapper');
         if (lore) lore.classList.add('hidden');
         
         document.getElementById('status').innerText = "📖 Which arena do you wish to enter?";
         document.getElementById('status').style.color = "#ffeb3b";
-
+    
         speak("Which arena do you wish to enter?");
         
         if (!isRecognitionActive) {
