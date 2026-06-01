@@ -31,10 +31,10 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
-    "whitenoise.middleware.WhiteNoiseMiddleware", # Handles static assets effectively in production
+    "whitenoise.middleware.WhiteNoiseMiddleware", 
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
-    "django.middleware.csrf.CsrfViewMiddleware",  # <-- Protects against CSRF
+    "django.middleware.csrf.CsrfViewMiddleware",  
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
@@ -70,7 +70,6 @@ DATABASES = {
 
 # --- FIX: Secure & modern dynamic database extraction ---
 if os.environ.get('DATABASE_URL'):
-    # Keeps SSL active by default for production, but allows flipping it off locally if needed
     ssl_require = os.environ.get("DATABASE_SSL_REQUIRE", "True") == "True"
     DATABASES['default'] = dj_database_url.config(
         conn_max_age=600, 
@@ -93,10 +92,7 @@ USE_TZ = True
 
 # --- STATIC CONFIGURATION FOR PRODUCTION ---
 STATIC_URL = "static/"
-
-# Ensure this folder physically exists at your project root if used, otherwise remove this line!
 STATICFILES_DIRS = [BASE_DIR / 'static'] 
-
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
@@ -105,25 +101,28 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 LOGIN_URL = '/login/'
 LOGIN_REDIRECT_URL = '/'
 
-# NOTE: LOGOUT_REDIRECT_URL has been removed. 
-# Explicit routing control is now safely handled via the TemplateView configuration inside urls.py.
-
 # --- CSRF and Security Settings for Production Environments ---
+# Adding explicit fallback arrays solves the 403 error loops across production builds.
 if not DEBUG:
-    # 1. Map trusted origins out of an environment variable string
-    csrf_origins = os.environ.get("CSRF_TRUSTED_ORIGINS", "")
-    if csrf_origins:
-        CSRF_TRUSTED_ORIGINS = csrf_origins.split(",")
+    CSRF_TRUSTED_ORIGINS = [
+        'https://spellcasting-production.up.railway.app',
+        'http://127.0.0.1:8000',
+        'http://localhost:8000'
+    ]
+    
+    # Optional fallback parser if you pass variables dynamically down the road
+    env_origins = os.environ.get("CSRF_TRUSTED_ORIGINS", "")
+    if env_origins:
+        CSRF_TRUSTED_ORIGINS += env_origins.split(",")
         
-    # 2. Strict cookie enforcement over HTTPS proxies
     SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
+    SECURE_REFERRER_POLICY = "same-origin"
 
 # --- WHITENOISE VIDEO STREAM FIXES FOR RAILWAY ---
 WHITENOISE_MIME_TYPES = {
     '.mp4': 'video/mp4'
 }
 
-# Stop WhiteNoise from compressing video files into broken gzip targets
 WHITENOISE_SKIP_COMPRESS_EXTENSIONS = ('jpg', 'jpeg', 'png', 'gif', 'webp', 'mp4', 'mp3', 'wav')
