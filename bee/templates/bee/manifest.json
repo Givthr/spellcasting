@@ -9,12 +9,12 @@
   "orientation": "portrait-primary",
   "icons": [
     {
-      "src": "/static/bee/bg-spellcasting.jpg",
+      "src": "/static/bee/bg-spellcasting.png",
       "sizes": "192x192",
       "type": "image/png"
     },
     {
-      "src": "/static/bee/bg-spellcasting.jpg",
+      "src": "/static/bee/bg-spellcasting.png",
       "sizes": "512x512",
       "type": "image/png"
     }
