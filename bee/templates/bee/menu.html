@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Spellcasting - Main Menu</title>
     
-    <link rel="manifest" href="/manifest.json">
+    <link rel="manifest" href="{% url 'manifest.json' %}">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="mobile-web-app-title" content="Spellcasting">
@@ -554,7 +554,7 @@
 
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
-            navigator.serviceWorker.register("/sw.js")
+            navigator.serviceWorker.register("{% url 'sw.js' %}")
                 .then(reg => console.log('[PWA] Service Worker operating at root scope:', reg.scope))
                 .catch(err => console.error('[PWA] Root registration refused:', err));
         });
