@@ -1,9 +1,16 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Spellcasting – Login</title>
+  
+  <link rel="manifest" href="/manifest.json">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Spellcasting">
+
   <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&family=Cinzel:wght@600&family=Raleway:wght@400;600;700&display=swap" rel="stylesheet"/>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -29,13 +36,11 @@
       overflow: hidden;
     }
 
-    /* ── Starfield canvas ── */
     #stars {
       position: fixed; inset: 0; z-index: 0;
       pointer-events: none;
     }
 
-    /* ── Lightning streaks ── */
     .lightning-layer {
       position: fixed; inset: 0; z-index: 1;
       pointer-events: none;
@@ -59,7 +64,6 @@
       100% { opacity: 0; }
     }
 
-    /* ── Page layout ── */
     .page {
       position: relative; z-index: 10;
       min-height: 100vh;
@@ -70,7 +74,6 @@
       padding: 20px;
     }
 
-    /* ── Title ── */
     .site-title {
       font-family: 'Cinzel Decorative', cursive;
       font-size: clamp(1.6rem, 4vw, 2.6rem);
@@ -78,9 +81,7 @@
       letter-spacing: 4px;
       text-transform: uppercase;
       margin-bottom: 4px;
-      text-shadow:
-        0 0 20px rgba(200,151,42,.6),
-        0 0 60px rgba(79,195,247,.3);
+      text-shadow: 0 0 20px rgba(200,151,42,.6), 0 0 60px rgba(79,195,247,.3);
       animation: titlePulse 3s ease-in-out infinite;
     }
     @keyframes titlePulse {
@@ -96,17 +97,13 @@
       margin-bottom: 36px;
     }
 
-    /* ── Card ── */
     .card {
       background: var(--card-bg);
       border: 1px solid var(--card-border);
       border-radius: 12px;
       padding: 40px 42px 36px;
       width: 100%; max-width: 420px;
-      box-shadow:
-        0 0 0 1px rgba(79,195,247,.08),
-        0 20px 60px rgba(0,0,0,.6),
-        inset 0 1px 0 rgba(255,255,255,.04);
+      box-shadow: 0 0 0 1px rgba(79,195,247,.08), 0 20px 60px rgba(0,0,0,.6), inset 0 1px 0 rgba(255,255,255,.04);
       animation: cardIn .6s cubic-bezier(.22,1,.36,1) both;
     }
     @keyframes cardIn {
@@ -124,7 +121,6 @@
       margin-bottom: 28px;
     }
 
-    /* ── Error ── */
     .error-box {
       background: rgba(229,115,115,.1);
       border: 1px solid rgba(229,115,115,.4);
@@ -138,7 +134,6 @@
       letter-spacing: .5px;
     }
 
-    /* ── Fields ── */
     .field { margin-bottom: 18px; }
     label {
       display: block;
@@ -180,14 +175,12 @@
     }
     .pw-toggle:hover { color: var(--blue-glow); }
 
-    /* ── Divider ── */
     .divider {
       height: 1px;
       background: linear-gradient(to right, transparent, var(--card-border), transparent);
       margin: 24px 0;
     }
 
-    /* ── Submit button — matches START GAME style ── */
     .btn-login {
       width: 100%;
       padding: 14px;
@@ -222,7 +215,6 @@
       box-shadow: 0 2px 10px rgba(200,151,42,.3);
     }
 
-    /* ── Footer ── */
     .card-footer {
       text-align: center;
       margin-top: 20px;
@@ -287,7 +279,6 @@
 </div>
 
 <script>
-/* ── Starfield ── */
 (function() {
   const c = document.getElementById('stars');
   const ctx = c.getContext('2d');
@@ -317,7 +308,6 @@
   resize(); draw();
 })();
 
-/* ── Lightning bolts ── */
 (function() {
   const layer = document.getElementById('lightningLayer');
   function spawnBolt() {
@@ -340,12 +330,18 @@
   for (let i = 0; i < 6; i++) spawnBolt();
 })();
 
-/* ── Password toggle ── */
 function togglePw() {
   const inp = document.getElementById('password');
   const btn = document.querySelector('.pw-toggle');
-  if (inp.type === 'password') { inp.type = 'text';     btn.textContent = '🙈'; }
+  if (inp.type === 'password') { inp.type = 'text';      btn.textContent = '🙈'; }
   else                         { inp.type = 'password'; btn.textContent = '👁';  }
+}
+
+// PWA Service Worker Root Registration Execution Link
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register("/sw.js");
+    });
 }
 </script>
 </body>
