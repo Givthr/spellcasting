@@ -1,29 +1,44 @@
 const CACHE_NAME = 'spellcasting-v1';
-const ASSETS_TO_CACHE = [
+const urlsToCache = [
+  '/',
   '/login/',
-  '/logout/'
+  '/register/',
+  '/static/bee/intro.mp4',
+  '/static/bee/bg-spellcasting.jpg' // FIXED: Point to the actual .jpg file
 ];
 
-self.addEventListener('install', (event) => {
+// Install stage: precache system assets
+self.addEventListener('install', event => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(ASSETS_TO_CACHE);
+    caches.open(CACHE_NAME)
+      .then(cache => {
+        console.log('[Service Worker] Pre-caching critical assets safely');
+        return cache.addAll(urlsToCache);
+      })
+      .catch(err => console.error('[Service Worker] Cache addAll crashed due to a missing asset file path:', err))
+  );
+});
+
+// Activation stage: clear legacy systems
+self.addEventListener('activate', event => {
+  event.waitUntil(
+    caches.keys().then(cacheNames => {
+      return Promise.all(
+        cacheNames.map(cache => {
+          if (cache !== CACHE_NAME) {
+            console.log('[Service Worker] Clearing legacy application shell cache stores');
+            return caches.delete(cache);
+          }
+        })
+      );
     })
   );
-  self.skipWaiting();
 });
 
-self.addEventListener('activate', (event) => {
-  event.waitUntil(self.clients.claim());
-});
-
-self.addEventListener('fetch', (event) => {
-  if (event.request.method !== 'GET') return;
-
+// Fetch stage: network fallback strategies
+self.addEventListener('fetch', event => {
   event.respondWith(
-    fetch(event.request)
-      .catch(() => {
-        return caches.match(event.request);
-      })
+    caches.match(event.request)
+      .then(response => response || fetch(event.request))
   );
 });
