@@ -5,6 +5,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Spellcasting - Main Menu</title>
+    
+    <link rel="manifest" href="/manifest.json">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Spellcasting">
+
     <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&family=Cinzel:wght@600&family=Raleway:wght@400;600;700&display=swap" rel="stylesheet"/>
     <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -177,7 +183,7 @@
         text-shadow: 0 0 10px rgba(79,195,247,.3);
     }
 
-    button.action-btn, input.action-btn {
+    button.action-btn {
         display: inline-block;
         padding: 12px 28px;
         border: none;
@@ -191,7 +197,7 @@
         transition: transform .15s, box-shadow .15s, filter .15s;
         margin: 8px;
     }
-    button.action-btn:hover, input.action-btn:hover {
+    button.action-btn:hover {
         transform: translateY(-2px);
         filter: brightness(1.08);
     }
@@ -252,7 +258,7 @@
             LEADERBOARD
         </button>
         
-        <form id="manualLogoutForm" method="POST" action="{% url 'logout' %}" style="display: inline;">
+        <form method="POST" action="{% url 'logout' %}" style="display: inline;">
             {% csrf_token %}
             <button type="submit" class="action-btn" style="background-color: #5c2c2c; color: #ffcccc; border: 1px solid #7d3c3c;">
                 LOGOUT
@@ -446,9 +452,9 @@
             return true;
         }
         
-        // Securely map programmatic POST logic inside voice tracking loop
+        // Secure token harvesting payload for seamless hands-free voice logouts
         if (transcript.includes("logout") || transcript.includes("log out")) {
-            console.log("[System] Voice log out detected. Executing dynamic payload form...");
+            console.log("[System] Voice-triggered logout running secure payload injection...");
             const form = document.createElement('form');
             form.method = 'POST';
             form.action = '/logout/';
@@ -540,6 +546,15 @@
             endIntroSequence();
         }
     });
+
+    // PWA Engine Integration (Points to absolute root scope)
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register("/sw.js")
+                .then(reg => console.log('[PWA] Service Worker operating at root scope:', reg.scope))
+                .catch(err => console.error('[PWA] Root registration refused:', err));
+        });
+    }
 </script>
 </body>
 </html>
