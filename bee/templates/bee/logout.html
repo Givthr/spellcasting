@@ -240,8 +240,7 @@ const interval = setInterval(() => {
 }, 1000);
 
 function redirectToLogin() {
-  // Django's default authentication path maps logouts back to /login/
-  window.location.href = "{% url 'login' %}";
+  window.location.href = "/login/";
 }
 </script>
 </body>
