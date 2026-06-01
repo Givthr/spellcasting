@@ -101,9 +101,12 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
+# --- AUTHENTICATION FLOW ROUTING ---
 LOGIN_URL = '/login/'
 LOGIN_REDIRECT_URL = '/'
-LOGOUT_REDIRECT_URL = 'login'
+
+# NOTE: LOGOUT_REDIRECT_URL has been removed. 
+# Explicit routing control is now safely handled via the TemplateView configuration inside urls.py.
 
 # --- CSRF and Security Settings for Production Environments ---
 if not DEBUG:
