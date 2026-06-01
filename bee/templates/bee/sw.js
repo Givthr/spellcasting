@@ -7,7 +7,6 @@ const urlsToCache = [
   '/static/bee/images/512.png'
 ];
 
-// Install stage: precache system assets
 self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE_NAME)
@@ -19,7 +18,7 @@ self.addEventListener('install', event => {
   );
 });
 
-// Activation stage: clear legacy systems
+
 self.addEventListener('activate', event => {
   event.waitUntil(
     caches.keys().then(cacheNames => {
