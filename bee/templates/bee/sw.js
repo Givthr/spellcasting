@@ -5,7 +5,7 @@ const urlsToCache = [
   '/register/',
   '/static/bee/intro.mp4',
   '/static/bee/images/192.jpg',
-  '/static/bee/images/512.jpg',
+  '/static/bee/images/512.jpg'
 ];
 
 // Install stage: precache system assets
