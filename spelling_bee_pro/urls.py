@@ -9,6 +9,15 @@ from bee.views import game_view, game_arena_view, save_score, leaderboard_view, 
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('sw.js', TemplateView.as_view(
+        template_name="sw.js", 
+        content_type='application/javascript'
+    ), name='sw.js'),
+    
+    path('manifest.json', TemplateView.as_view(
+        template_name="manifest.json", 
+        content_type='application/json'
+    ), name='manifest.json'),
 
     path('', game_view, name='play_game'),
 
