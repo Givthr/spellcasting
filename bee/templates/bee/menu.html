@@ -229,7 +229,7 @@
             </p>
             <div class="lore-instruction">
                 <span>Spell the incantations, letter by letter, to cast your spells and banish the horde.</span>
-            </div>
+            </div >
         </div>
         
         <div id="difficultyWrapper" class="hidden">
@@ -252,17 +252,21 @@
         <button id="startTriggerBtn" class="action-btn" style="background-color: #b68f40; font-size: 1.5rem; padding: 15px 30px;" onclick="revealDifficultyOptions()">
             START ADVENTURE
         </button>
+        <br>
         <button class="action-btn" style="background-color: #3a3f4d; color: #ccc;" onclick="window.location.href='/my-scores/'">
             MY SCORES
         </button>
         <button class="action-btn" style="background-color: #3a3f4d; color: #ccc;" onclick="window.location.href='/leaderboard/'">
             LEADERBOARD
         </button>
+        <button class="action-btn" style="background-color: #5c2c2c; color: #ffcccc; border: 1px solid #7d3c3c;" onclick="window.location.href='/logout/'">
+            LOGOUT
+        </button>
 
        <p style="font-family: 'Cinzel', serif; color: #81C784; margin-top: 20px; font-weight: bold; line-height: 1.6; font-size: 0.75rem; letter-spacing: 1px;">
             🎤 Navigate using voice commands:
             <br>
-            <span style="color: var(--muted); font-weight: normal; font-size: 0.7rem; letter-spacing: 0.5px;">Say 'Start', then choose an arena. You can also say 'Scores' and 'Leaderboard'!</span>
+            <span style="color: var(--muted); font-weight: normal; font-size: 0.7rem; letter-spacing: 0.5px;">Say 'Start', 'Scores', 'Leaderboard', or 'Logout'!</span>
         </p>
     </div>
 </div>
@@ -447,6 +451,11 @@
         }
         if (transcript.includes("leaderboard") || transcript.includes("leadership") || transcript.includes("leader")) {
             window.location.href = '/leaderboard/';
+            return true;
+        }
+        // Voice route tracking for logging out
+        if (transcript.includes("logout") || transcript.includes("log out")) {
+            window.location.href = '/logout/';
             return true;
         }
 
