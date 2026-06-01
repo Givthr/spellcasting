@@ -34,10 +34,8 @@
         position: relative;
     }
 
-    /* Ambient Starfield Layer */
     #stars { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
 
-    /* Intro Overlay Settings */
     #introOverlay {
         position: fixed;
         top: 0; left: 0;
@@ -68,7 +66,6 @@
     }
     .skip-intro-btn:hover { background-color: rgba(255, 255, 255, 0.4); }
 
-    /* Main Menu Frame */
     .container {
         position: relative;
         z-index: 10;
@@ -107,7 +104,6 @@
         margin-bottom: 30px;
     }
 
-    /* Ancient Lore Typography & Layout */
     .lore-container {
         margin: 24px 0;
         padding: 16px 20px;
@@ -137,7 +133,6 @@
         text-shadow: 0 0 10px rgba(79,195,247,.2);
     }
 
-    /* Difficulty Selection Configurations */
     .difficulty-section { margin: 25px 0; }
     .difficulty-label {
         font-family: 'Cinzel', serif;
@@ -168,12 +163,10 @@
         color: white;
     }
     
-    /* Dynamic Active Selections matching the Scores theme */
     .diff-btn.selected[data-diff="easy"] { background: rgba(76,175,80,.2); color: #81C784; border-color: #81C784; box-shadow: 0 0 15px rgba(76,175,80,.3); }
     .diff-btn.selected[data-diff="medium"] { background: rgba(255,152,0,.2); color: #FFB74D; border-color: #FFB74D; box-shadow: 0 0 15px rgba(255,152,0,.3); }
     .diff-btn.selected[data-diff="hard"] { background: rgba(229,57,53,.2); color: #EF5350; border-color: #EF5350; box-shadow: 0 0 15px rgba(229,57,53,.3); }
 
-    /* Interactive Status Indicators */
     .status-box {
         font-family: 'Cinzel', serif;
         font-size: 0.75rem;
@@ -184,8 +177,7 @@
         text-shadow: 0 0 10px rgba(79,195,247,.3);
     }
 
-    /* Functional Menu Navigation Targets */
-    button.action-btn {
+    button.action-btn, input.action-btn {
         display: inline-block;
         padding: 12px 28px;
         border: none;
@@ -199,7 +191,7 @@
         transition: transform .15s, box-shadow .15s, filter .15s;
         margin: 8px;
     }
-    button.action-btn:hover {
+    button.action-btn:hover, input.action-btn:hover {
         transform: translateY(-2px);
         filter: brightness(1.08);
     }
@@ -229,7 +221,7 @@
             </p>
             <div class="lore-instruction">
                 <span>Spell the incantations, letter by letter, to cast your spells and banish the horde.</span>
-            </div >
+            </div>
         </div>
         
         <div id="difficultyWrapper" class="hidden">
@@ -259,9 +251,13 @@
         <button class="action-btn" style="background-color: #3a3f4d; color: #ccc;" onclick="window.location.href='/leaderboard/'">
             LEADERBOARD
         </button>
-        <button class="action-btn" style="background-color: #5c2c2c; color: #ffcccc; border: 1px solid #7d3c3c;" onclick="window.location.href='/logout/'">
-            LOGOUT
-        </button>
+        
+        <form id="manualLogoutForm" method="POST" action="{% url 'logout' %}" style="display: inline;">
+            {% csrf_token %}
+            <button type="submit" class="action-btn" style="background-color: #5c2c2c; color: #ffcccc; border: 1px solid #7d3c3c;">
+                LOGOUT
+            </button>
+        </form>
 
        <p style="font-family: 'Cinzel', serif; color: #81C784; margin-top: 20px; font-weight: bold; line-height: 1.6; font-size: 0.75rem; letter-spacing: 1px;">
             🎤 Navigate using voice commands:
@@ -275,9 +271,8 @@
     const video = document.getElementById('introVideo');
     let isGameInitiated = false; 
     let shouldMenuRun = false;
-    let isRecognitionActive = false; // Track explicit engine status to prevent collision errors
+    let isRecognitionActive = false;
 
-    // Ambient Starfield Canvas Renderer Pipeline
     (function() {
         const canvas = document.getElementById('stars');
         if (!canvas) return;
@@ -321,7 +316,6 @@
         draw();
     })();
     
-    // Safety tracking timestamp base
     let lastCommandTimestamp = performance.now();
 
     const synth = window.speechSynthesis;
@@ -334,7 +328,6 @@
         menuRecognition.interimResults = true;
         menuRecognition.lang = 'en-US';
 
-        // Manage our status flag using native engine hooks
         menuRecognition.onstart = function() {
             isRecognitionActive = true;
             console.log("[System] Speech recognition engine active.");
@@ -343,7 +336,6 @@
         menuRecognition.onend = function() {
             isRecognitionActive = false;
             console.log("[System] Speech recognition engine went offline.");
-            // Keep it alive if we are still on the menu screen
             if (shouldMenuRun) {
                 setTimeout(() => { 
                     if (shouldMenuRun && !isRecognitionActive) {
@@ -453,9 +445,24 @@
             window.location.href = '/leaderboard/';
             return true;
         }
-        // Voice route tracking for logging out
+        
+        // Securely map programmatic POST logic inside voice tracking loop
         if (transcript.includes("logout") || transcript.includes("log out")) {
-            window.location.href = '/logout/';
+            console.log("[System] Voice log out detected. Executing dynamic payload form...");
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '/logout/';
+
+            const csrfInput = document.createElement('input');
+            csrfInput.type = 'hidden';
+            csrfInput.name = 'csrfmiddlewaretoken';
+            csrfInput.value = document.cookie.split('; ')
+                .find(row => row.startsWith('csrftoken='))
+                ?.split('=')[1] || '';
+
+            form.appendChild(csrfInput);
+            document.body.appendChild(form);
+            form.submit();
             return true;
         }
 
