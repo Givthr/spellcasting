@@ -8,8 +8,8 @@
     
     <link rel="manifest" href="/manifest.json">
     <meta name="mobile-web-app-capable" content="yes">
-    <meta name="mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="mobile-web-app-title" content="Spellcasting">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Spellcasting">
 
     <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&family=Cinzel:wght@600&family=Raleway:wght@400;600;700&display=swap" rel="stylesheet"/>
     <style>
@@ -251,6 +251,12 @@
             START ADVENTURE
         </button>
         <br>
+        
+        <button id="pwaInstallBtn" class="action-btn hidden" style="background-color: #4FC3F7; color: #1A1E24; font-weight: bold; border: 1px solid #00E5FF; box-shadow: 0 0 15px rgba(79,195,247,.4);">
+            📥 DOWNLOAD APP
+        </button>
+        <br>
+
         <button class="action-btn" style="background-color: #3a3f4d; color: #ccc;" onclick="window.location.href='/my-scores/'">
             MY SCORES
         </button>
@@ -452,7 +458,6 @@
             return true;
         }
         
-        // Secure token harvesting payload for seamless hands-free voice logouts
         if (transcript.includes("logout") || transcript.includes("log out")) {
             console.log("[System] Voice-triggered logout running secure payload injection...");
             const form = document.createElement('form');
@@ -547,7 +552,6 @@
         }
     });
 
-    // PWA Engine Integration (Points to absolute root scope)
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
             navigator.serviceWorker.register("/sw.js")
@@ -555,6 +559,36 @@
                 .catch(err => console.error('[PWA] Root registration refused:', err));
         });
     }
+
+    let deferredPrompt;
+    const installBtn = document.getElementById('pwaInstallBtn');
+
+    window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredPrompt = e;
+        if (installBtn) {
+            installBtn.classList.remove('hidden');
+        }
+        console.log('[PWA Button] App meets all install criteria. Download button active.');
+    });
+
+    if (installBtn) {
+        installBtn.addEventListener('click', async () => {
+            if (!deferredPrompt) return;
+            deferredPrompt.prompt();
+            const { outcome } = await deferredPrompt.userChoice;
+            console.log(`[PWA Button] User execution response outcome: ${outcome}`);
+            deferredPrompt = null;
+            installBtn.classList.add('hidden');
+        });
+    }
+
+    window.addEventListener('appinstalled', (e) => {
+        console.log('[PWA Button] Spellcasting successfully installed into local app container environment!');
+        if (installBtn) {
+            installBtn.classList.add('hidden');
+        }
+    });
 </script>
 </body>
 </html>
