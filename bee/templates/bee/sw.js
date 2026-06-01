@@ -4,7 +4,8 @@ const urlsToCache = [
   '/login/',
   '/register/',
   '/static/bee/intro.mp4',
-  '/static/bee/spell-icon.jpg' // FIXED: Point to the actual .jpg file
+  '/static/bee/images/192.jpg'
+  '/static/bee/images/512.jpg'
 ];
 
 // Install stage: precache system assets
