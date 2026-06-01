@@ -1,9 +1,16 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Spellcasting – Logged Out</title>
+  
+  <link rel="manifest" href="/manifest.json">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Spellcasting">
+
   <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&family=Cinzel:wght@600&family=Raleway:wght@400;600;700&display=swap" rel="stylesheet"/>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -16,7 +23,6 @@
       --card-bg:   #22272E;
       --card-border: #2E3A4A;
       --text:      #D0D8E0;
-      --muted:     #7A8A9A;
     }
 
     html, body {
@@ -27,13 +33,11 @@
       overflow: hidden;
     }
 
-    /* ── Starfield canvas ── */
     #stars {
       position: fixed; inset: 0; z-index: 0;
       pointer-events: none;
     }
 
-    /* ── Page layout ── */
     .page {
       position: relative; z-index: 10;
       min-height: 100vh;
@@ -44,7 +48,6 @@
       padding: 20px;
     }
 
-    /* ── Title ── */
     .site-title {
       font-family: 'Cinzel Decorative', cursive;
       font-size: clamp(1.6rem, 4vw, 2.6rem);
@@ -54,17 +57,7 @@
       margin-bottom: 4px;
       text-shadow: 0 0 20px rgba(200,151,42,.6), 0 0 60px rgba(79,195,247,.3);
     }
-    
-    .site-sub {
-      font-family: 'Cinzel', serif;
-      font-size: .78rem;
-      color: var(--muted);
-      letter-spacing: 3px;
-      text-transform: uppercase;
-      margin-bottom: 36px;
-    }
 
-    /* ── Card ── */
     .card {
       background: var(--card-bg);
       border: 1px solid var(--card-border);
@@ -72,10 +65,7 @@
       padding: 40px 42px 36px;
       width: 100%; max-width: 440px;
       text-align: center;
-      box-shadow:
-        0 0 0 1px rgba(79,195,247,.08),
-        0 20px 60px rgba(0,0,0,.6),
-        inset 0 1px 0 rgba(255,255,255,.04);
+      box-shadow: 0 0 0 1px rgba(79,195,247,.08), 0 20px 60px rgba(0,0,0,.6), inset 0 1px 0 rgba(255,255,255,.04);
       animation: cardIn .6s cubic-bezier(.22,1,.36,1) both;
     }
     @keyframes cardIn {
@@ -100,7 +90,6 @@
       margin-bottom: 24px;
     }
 
-    /* ── Countdown Timer Visual ── */
     .timer-container {
       margin: 20px auto;
       font-family: 'Cinzel', serif;
@@ -139,7 +128,6 @@
       margin: 24px 0;
     }
 
-    /* ── Primary Action Button ── */
     .btn-return {
       width: 100%;
       padding: 14px;
@@ -162,9 +150,6 @@
       color: #fff;
       box-shadow: 0 6px 20px rgba(79,195,247,.15);
     }
-    .btn-return:active {
-      transform: translateY(1px);
-    }
   </style>
 </head>
 <body>
@@ -173,7 +158,6 @@
 
 <div class="page">
   <div class="site-title">Spellcasting</div>
-  <div class="site-sub">A Voice-Controlled Spelling Adventure</div>
 
   <div class="card">
     <div class="card-heading">🔮 Connection Severed</div>
@@ -196,7 +180,6 @@
 </div>
 
 <script>
-/* ── Starfield background engine ── */
 (function() {
   const c = document.getElementById('stars');
   const ctx = c.getContext('2d');
@@ -226,7 +209,6 @@
   resize(); draw();
 })();
 
-/* ── Redirection countdown timer logic ── */
 let timeLeft = 5;
 const countdownEl = document.getElementById('countdown');
 
