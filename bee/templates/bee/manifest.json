@@ -9,7 +9,7 @@
   "orientation": "portrait-primary",
   "icons": [
     {
-      "src": "/static/bee/images/192.jng",
+      "src": "/static/bee/images/192.jpg",
       "sizes": "192x192",
       "type": "image/jpeg"
     },
