@@ -24,7 +24,7 @@ urlpatterns = [
     ), name='login'),
 
     path('logout/', auth_views.LogoutView.as_view(
-        next_page='/login/'
+        template_name='bee/logout.html'
     ), name='logout'),
 
     path('register/', register_view, name='register'),
