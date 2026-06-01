@@ -4,7 +4,7 @@ from django.urls import path
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib.auth import views as auth_views
-# FIXED: Added game_arena_view to the import statement below
+from django.views.generic import TemplateView
 from bee.views import game_view, game_arena_view, save_score, leaderboard_view, my_scores_view, register_view
 
 urlpatterns = [
