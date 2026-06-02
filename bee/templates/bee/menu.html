@@ -478,7 +478,7 @@
         }
 
         if (!isGameInitiated) {
-            if (transcript.includes("start") || transcript.includes("play") || transcript.includes("game") || transcript.includes("begin")) {
+            if (transcript.includes("start") || transcript.includes("play") || transcript.includes("game") || transcript.includes("begin") || transcript.includes("yes") || transcript.includes("yep") || transcript.includes("yeah")) {
                 revealDifficultyOptions();
                 return true;
             }
