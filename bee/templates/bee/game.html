@@ -279,6 +279,39 @@
             transform: none !important;
             filter: grayscale(1) opacity(0.5) !important;
         }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        
+        .modal-content {
+            background: var(--surface-color, #222); 
+            padding: 2rem;
+            border-radius: 12px;
+            text-align: center;
+            color: white;
+            border: 2px solid var(--primary-color, #444);
+        }
+        
+        .voice-hint {
+            color: #ffd700;
+            font-size: 1.1rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .modal-buttons button {
+            margin: 0 10px;
+            padding: 10px 20px;
+            font-size: 1.1rem;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
@@ -324,6 +357,18 @@
         <button class="btn btn-danger" id="exitBtn" style="margin-top: 15px;" onclick="exitToMenu()">
             🚪 RETREAT TO BASE
         </button>
+    </div>
+</div>
+
+<div id="retreatModal" style="display: none;" class="modal-overlay">
+    <div class="modal-content">
+        <h2>Retreat?</h2>
+        <p>Are you sure you want to abandon this battle?</p>
+        <p class="voice-hint">🗣️ Say <strong>"Yes"</strong> or <strong>"No"</strong></p>
+        <div class="modal-buttons">
+            <button onclick="exitToMenu()">Yes</button>
+            <button onclick="cancelRetreat()">No</button>
+        </div>
     </div>
 </div>
 
@@ -441,6 +486,7 @@
     let gameOver = false;
     let isTransitioning = false; 
     let isExiting = false;
+    let isConfirmingRetreat = false;
 
     let timeLeft = 15;
     let countdownInterval = null;
@@ -555,8 +601,10 @@
 
         if (wordsPool.length === 0) {
             gameOver = true;
+            isTransitioning = false;
             stopTimer();
-            safelyStopRecognition();
+            startListening();
+            
             document.getElementById('status').innerText = "🏆 THE HORDE IS VANQUISHED!";
             document.getElementById('status').style.color = "var(--success)";
             const spellingEl = document.getElementById('spellingDisplay');
@@ -660,8 +708,10 @@
 
     function triggerGameOver() {
         gameOver = true;
+        isTransitioning = false;
         stopTimer();
-        safelyStopRecognition();
+        startListening();
+        
         setInterfaceDisabled(true);
         document.getElementById('status').innerText = "💀 YOU HAVE FALLEN";
         document.getElementById('status').style.color = "var(--danger)";
@@ -716,13 +766,53 @@
         });
     }
 
+    function promptRetreatConfirmation() {
+        isConfirmingRetreat = true;
+        stopTimer();
+        
+        // Show the modal
+        document.getElementById('retreatModal').style.display = 'flex';
+        
+        if (typeof speak === 'function') {
+            speak("Are you sure you want to retreat? Say yes or no.");
+        }
+    }
+
+    function cancelRetreat() {
+        isConfirmingRetreat = false;
+        
+        document.getElementById('retreatModal').style.display = 'none';
+        
+        if (!gameOver) {
+            startTimer(); 
+        }
+        
+        console.log("⚔️ Retreat cancelled. Back to battle!");
+    }
+
     if (recognition) {
        recognition.onresult = function(event) {
             let rawTranscript = event.results[event.results.length - 1][0].transcript.trim().toLowerCase();
             
+            if (isConfirmingRetreat) {
+                if (rawTranscript.includes("yes")) {
+                    console.log("🗣️ Voice Command: YES (Retreat Confirmed)");
+                    exitToMenu();
+                } else if (rawTranscript.includes("no")) {
+                    console.log("🗣️ Voice Command: NO (Retreat Canceled)");
+                    cancelRetreat();
+                }
+                return;
+            }
+
             if (rawTranscript.includes("retreat")) {
                 console.log("🗣️ Voice Command Triggered: RETREAT");
-                exitToMenu();
+                
+                if (gameOver) {
+                    exitToMenu();
+                } else {
+                    promptRetreatConfirmation();
+                }
                 return; 
             }
 
@@ -818,7 +908,7 @@
         };
     
         recognition.onend = function () {
-            if (!gameOver && !isTransitioning) {
+           if (!isTransitioning && !isExiting) {
                 try { recognition.start(); } catch(e) {}
             }
         };
