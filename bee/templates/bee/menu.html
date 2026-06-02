@@ -280,6 +280,7 @@
 </div>
 
 <script>
+    const djangoCsrfToken = "{{ csrf_token }}";
     const video = document.getElementById('introVideo');
     let isGameInitiated = false; 
     let shouldMenuRun = false;
@@ -462,21 +463,20 @@
             console.log("[System] Voice-triggered logout running secure payload injection...");
             const form = document.createElement('form');
             form.method = 'POST';
-            form.action = '/logout/';
-
+            form.action = "{% url 'logout' %}";
+    
             const csrfInput = document.createElement('input');
             csrfInput.type = 'hidden';
             csrfInput.name = 'csrfmiddlewaretoken';
-            csrfInput.value = document.cookie.split('; ')
-                .find(row => row.startsWith('csrftoken='))
-                ?.split('=')[1] || '';
-
+            
+            csrfInput.value = djangoCsrfToken;
+    
             form.appendChild(csrfInput);
             document.body.appendChild(form);
             form.submit();
             return true;
         }
-
+    
         if (!isGameInitiated) {
             if (transcript.includes("start") || transcript.includes("play") || transcript.includes("game") || transcript.includes("begin") || transcript.includes("yes") || transcript.includes("yep") || transcript.includes("yeah")) {
                 revealDifficultyOptions();
@@ -484,7 +484,7 @@
             }
             return false;
         }
-
+    
         if (transcript.includes("novice") || transcript.includes("nobis") || transcript.includes("nov eez")) { 
             selectDifficulty("easy"); 
             return true; 
