@@ -767,25 +767,25 @@
         });
     }
 
-    function promptRetreatConfirmation() {
+   function promptRetreatConfirmation() {
         isConfirmingRetreat = true;
         stopTimer();
+        safelyStopRecognition();
         
-        // Show the modal
         document.getElementById('retreatModal').style.display = 'flex';
         
         if (typeof speak === 'function') {
             speak("Are you sure you want to abandon this battle?");
         }
     }
-
+    
     function cancelRetreat() {
         isConfirmingRetreat = false;
-        
         document.getElementById('retreatModal').style.display = 'none';
+        safelyStopRecognition();
         
         if (!gameOver) {
-            startTimer(); 
+            startTimer();
         }
         
         console.log("⚔️ Retreat cancelled. Back to battle!");
@@ -793,20 +793,25 @@
 
     if (recognition) {
        recognition.onresult = function(event) {
+            let lastResultIndex = event.results.length - 1;
+            let resultObj = event.results[lastResultIndex];
             let rawTranscript = event.results[event.results.length - 1][0].transcript.trim().toLowerCase();
+            let isFinal = resultObj.isFinal;
             
             if (isConfirmingRetreat) {
-                if (rawTranscript.includes("yes")) {
-                    console.log("🗣️ Voice Command: YES (Retreat Confirmed)");
-                    exitToMenu();
-                } else if (rawTranscript.includes("no")) {
-                    console.log("🗣️ Voice Command: NO (Retreat Canceled)");
-                    cancelRetreat();
+                if (isFinal) {
+                    if (rawTranscript.includes("yes")) {
+                        console.log("🗣️ Voice Command: YES (Retreat Confirmed)");
+                        exitToMenu();
+                    } else if (rawTranscript.includes("no")) {
+                        console.log("🗣️ Voice Command: NO (Retreat Canceled)");
+                        cancelRetreat();
+                    }
                 }
                 return;
             }
 
-            if (rawTranscript.includes("retreat")) {
+            if (rawTranscript.includes("retreat") && isFinal) {
                 console.log("🗣️ Voice Command Triggered: RETREAT");
                 
                 if (gameOver) {
@@ -816,7 +821,7 @@
                 }
                 return; 
             }
-
+    
             if (isTransitioning || gameOver) return;
 
             if (rawTranscript.includes("recall")) {
