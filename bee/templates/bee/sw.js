@@ -35,22 +35,27 @@ self.addEventListener('activate', event => {
 });
 
 self.addEventListener('fetch', event => {
-    if (event.request.method !== 'GET') {
-        return;
+    if (event.request.mode === 'navigate') {
+        return; 
     }
 
     event.respondWith(
         caches.match(event.request)
             .then(cachedResponse => {
-                
-                return cachedResponse || fetch(event.request);
+                if (cachedResponse) {
+                    return cachedResponse;
+                }
+                return fetch(event.request).then(response => {
+                    if (response.redirected) {
+                        return response; 
+                    }
+                    return response;
+                });
             })
-
             .catch(error => {
-                console.error("Service Worker Fetch Failed:", error);
-                
-                if (event.request.headers.get('accept').includes('text/html')) {
-                    return caches.match('/offline/'); 
+                console.error("Fetch failed in service worker:", error);
+                if (event.request.headers.get('accept')?.includes('text/html')) {
+                    return caches.match('/offline/');
                 }
             })
     );
