@@ -908,7 +908,19 @@
         };
     
         recognition.onend = function () {
-           if (!isTransitioning && !isExiting) {
+            if (isExiting) return;
+
+            if (gameOver) {
+                try { 
+                    recognition.start(); 
+                    console.log("🎙️ Mic forced active for Game Over commands.");
+                } catch(e) {
+                    console.error("Failed to restart mic on game over:", e);
+                }
+                return;
+            }
+            
+            if (!isTransitioning) {
                 try { recognition.start(); } catch(e) {}
             }
         };
