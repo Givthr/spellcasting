@@ -722,7 +722,8 @@
     }
 
     function startListening() {
-        if (gameOver || isTransitioning || !recognition) return;
+        if (!recognition || isTransitioning) return; 
+        
         try { 
             recognition.start(); 
             document.querySelector('.container').classList.add('listening');
@@ -774,7 +775,7 @@
         document.getElementById('retreatModal').style.display = 'flex';
         
         if (typeof speak === 'function') {
-            speak("Are you sure you want to retreat? Say yes or no.");
+            speak("Are you sure you want to abandon this battle?");
         }
     }
 
