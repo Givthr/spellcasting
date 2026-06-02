@@ -34,21 +34,24 @@ self.addEventListener('activate', event => {
   );
 });
 
-// Fetch stage: network fallback strategies
 self.addEventListener('fetch', event => {
-  
-  if (event.request.method !== 'GET') {
-      return; 
-  }
+    if (event.request.method !== 'GET') {
+        return;
+    }
 
-  const url = new URL(event.request.url);
-  if (url.pathname.startsWith('/login/') || url.pathname.startsWith('/logout/') || url.pathname.startsWith('/register/')) {
-      event.respondWith(fetch(event.request));
-      return;
-  }
+    event.respondWith(
+        caches.match(event.request)
+            .then(cachedResponse => {
+                
+                return cachedResponse || fetch(event.request);
+            })
 
-  event.respondWith(
-    caches.match(event.request)
-      .then(response => response || fetch(event.request))
-  );
+            .catch(error => {
+                console.error("Service Worker Fetch Failed:", error);
+                
+                if (event.request.headers.get('accept').includes('text/html')) {
+                    return caches.match('/offline/'); 
+                }
+            })
+    );
 });
