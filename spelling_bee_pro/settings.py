@@ -103,12 +103,18 @@ LOGIN_REDIRECT_URL = '/'
 
 # --- CSRF and Security Settings for Production Environments ---
 # Adding explicit fallback arrays solves the 403 error loops across production builds.
-if not DEBUG:
-    CSRF_TRUSTED_ORIGINS = [
-        'https://spellcasting-production.up.railway.app',
-        'http://127.0.0.1:8000',
-        'http://localhost:8000'
-    ]
+CSRF_TRUSTED_ORIGINS = [
+    'http://127.0.0.1:8000',
+    'http://localhost:8000'
+]
+
+RAILWAY_DOMAIN = os.environ.get("RAILWAY_PUBLIC_DOMAIN")
+if RAILWAY_DOMAIN or not DEBUG:
+    if RAILWAY_DOMAIN:
+        CSRF_TRUSTED_ORIGINS.append(f"https://{RAILWAY_DOMAIN}")
+        ALLOWED_HOSTS.append(RAILWAY_DOMAIN)
+
+    CSRF_TRUSTED_ORIGINS.append('https://spellcasting-production.up.railway.app')
     
     # Optional fallback parser if you pass variables dynamically down the road
     env_origins = os.environ.get("CSRF_TRUSTED_ORIGINS", "")
