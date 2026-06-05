@@ -780,11 +780,14 @@
         
         document.getElementById('retreatModal').style.display = 'flex';
         
-        // ⚡ Start listening immediately so the player can interrupt/answer right away
-        startListening();
-        
         if (typeof speak === 'function') {
-            speak("Are you sure you want to abandon this battle?");
+            speak("Are you sure you want to abandon this battle?", () => {
+                if (isConfirmingRetreat && !gameOver) {
+                    startListening(); 
+                }
+            });
+        } else {
+            startListening();
         }
     }
     
