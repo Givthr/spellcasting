@@ -779,7 +779,7 @@
         safelyStopRecognition(true);
         
         document.getElementById('retreatModal').style.display = 'flex';
-       
+        
         startListening();
         
         if (typeof speak === 'function') {
@@ -843,36 +843,32 @@
             
             let liveTotalSpelling = "";
 
-            let combinedRawText = "";
             for (let i = 0; i < event.results.length; i++) {
-                combinedRawText += " " + event.results[i][0].transcript.toLowerCase();
-            }
-            combinedRawText = combinedRawText.trim();
-            let normalizedRaw = combinedRawText.replace(/\s+/g, "");
+                let chunk = event.results[i][0].transcript.toLowerCase().trim();
+                let spokenParts = chunk.replace(/[^a-zA-Z -]/g, "").split(/[\s-]+/);
 
-            if (normalizedRaw.includes(currentWord)) {
-                liveTotalSpelling = currentWord;
-            } else {
-                for (let i = 0; i < event.results.length; i++) {
-                    let chunk = event.results[i][0].transcript.toLowerCase().trim();
-                    let spokenParts = chunk.replace(/[^a-zA-Z -]/g, "").split(/[\s-]+/);
-
-                    spokenParts.forEach(part => {
-                        if (!part) return;
+                spokenParts.forEach(part => {
+                    if (!part) return;
+                    
+                    if (validLetters[part]) {
+                        liveTotalSpelling += validLetters[part];
+                    } else if (wordToLetterMap[part]) {
+                        liveTotalSpelling += wordToLetterMap[part];
+                    } else {
+                        const isGameWord = (part === currentWord) || 
+                                           difficultyWords.easy.includes(part) || 
+                                           difficultyWords.medium.includes(part) || 
+                                           difficultyWords.hard.includes(part);
                         
-                        if (validLetters[part]) {
-                            liveTotalSpelling += validLetters[part];
-                        } else if (wordToLetterMap[part]) {
-                            liveTotalSpelling += wordToLetterMap[part];
-                        } else {
+                        if (!isGameWord) {
                             for (let char of part) {
                                 if (char >= 'a' && char <= 'z') {
                                     liveTotalSpelling += char;
                                 }
                             }
                         }
-                    });
-                }
+                    }
+                });
             }
             
             liveTotalSpelling = liveTotalSpelling.trim();
