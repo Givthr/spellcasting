@@ -798,6 +798,7 @@
         
         if (!gameOver) {
             startTimer();
+            startListening();
         }
         
         console.log("⚔️ Retreat cancelled. Back to battle!");
@@ -806,8 +807,7 @@
     if (recognition) {
        recognition.onresult = function(event) {
             let lastResultIndex = event.results.length - 1;
-            let resultObj = event.results[lastResultIndex];
-            let rawTranscript = event.results[event.results.length - 1][0].transcript.trim().toLowerCase();
+            let rawTranscript = event.results[lastResultIndex][0].transcript.trim().toLowerCase();
             
             if (isConfirmingRetreat) {
                 if (rawTranscript.includes("yes")) {
@@ -911,10 +911,11 @@
                 return; 
             }
             
+            // EXCEEDED LENGTH FAILURE GATECHECK
             if (liveTotalSpelling.length >= currentWord.length && liveTotalSpelling !== currentWord) {
                 isTransitioning = true;
                 stopTimer();
-                safelyStopRecognition(true);
+                safelyStopRecognition(true); 
                 handleIncorrectTransition("The runes shattered!");
             }
         };
@@ -923,9 +924,7 @@
             if (isExiting) return;
 
             if (gameOver) {
-                try { 
-                    recognition.start(); 
-                } catch(e) {}
+                try { recognition.start(); } catch(e) {}
                 return;
             }
             
@@ -933,6 +932,7 @@
                 try { recognition.start(); } catch(e) {}
             }
         };
+    }
         
         recognition.onerror = function(e) {
             console.error("Speech error processing: ", e.error);
