@@ -775,7 +775,13 @@
         document.getElementById('retreatModal').style.display = 'flex';
         
         if (typeof speak === 'function') {
-            speak("Are you sure you want to abandon this battle?");
+            speak("Are you sure you want to abandon this battle?", () => {
+                if (isConfirmingRetreat && !gameOver) {
+                    startListening(); 
+                }
+            });
+        } else {
+            startListening();
         }
     }
     
@@ -799,19 +805,17 @@
             let isFinal = resultObj.isFinal;
             
             if (isConfirmingRetreat) {
-                if (isFinal) {
-                    if (rawTranscript.includes("yes")) {
-                        console.log("🗣️ Voice Command: YES (Retreat Confirmed)");
-                        exitToMenu();
-                    } else if (rawTranscript.includes("no")) {
-                        console.log("🗣️ Voice Command: NO (Retreat Canceled)");
-                        cancelRetreat();
-                    }
+                if (rawTranscript.includes("yes")) {
+                    console.log("🗣️ Voice Command: YES (Retreat Confirmed)");
+                    exitToMenu();
+                } else if (rawTranscript.includes("no")) {
+                    console.log("🗣️ Voice Command: NO (Retreat Canceled)");
+                    cancelRetreat();
                 }
                 return;
             }
 
-            if (rawTranscript.includes("retreat") && isFinal) {
+            if (rawTranscript.includes("retreat")) {
                 console.log("🗣️ Voice Command Triggered: RETREAT");
                 
                 if (gameOver) {
@@ -926,7 +930,7 @@
                 return;
             }
             
-            if (!isTransitioning) {
+            if (!isTransitioning && !isConfirmingRetreat) {
                 try { recognition.start(); } catch(e) {}
             }
         };
