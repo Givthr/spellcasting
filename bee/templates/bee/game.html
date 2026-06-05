@@ -780,6 +780,7 @@
         
         document.getElementById('retreatModal').style.display = 'flex';
         
+        // ⚡ Start listening immediately so the player can interrupt/answer right away
         startListening();
         
         if (typeof speak === 'function') {
@@ -855,17 +856,8 @@
                     } else if (wordToLetterMap[part]) {
                         liveTotalSpelling += wordToLetterMap[part];
                     } else {
-                        const isGameWord = (part === currentWord) || 
-                                           difficultyWords.easy.includes(part) || 
-                                           difficultyWords.medium.includes(part) || 
-                                           difficultyWords.hard.includes(part);
-                        
-                        if (!isGameWord) {
-                            for (let char of part) {
-                                if (char >= 'a' && char <= 'z') {
-                                    liveTotalSpelling += char;
-                                }
-                            }
+                        if (part.length === 1 && part >= 'a' && part <= 'z') {
+                            liveTotalSpelling += part;
                         }
                     }
                 });
