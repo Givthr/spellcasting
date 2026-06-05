@@ -662,7 +662,7 @@
         if (gameOver || isTransitioning) return;
     
         document.getElementById('spellingDisplay').innerText = "---";
-        safelyStopRecognition();
+        safelyStopRecognition(true);
     }
 
     // Helper UI update utility
@@ -730,9 +730,15 @@
         } catch(e) {}
     }
 
-    function safelyStopRecognition() {
+   function safelyStopRecognition(forceAbort = false) {
         if (recognition) {
-            try { recognition.stop(); } catch(e) {}
+            try { 
+                if (forceAbort) {
+                    recognition.abort();
+                } else {
+                    recognition.stop(); 
+                }
+            } catch(e) {}
         }
         document.querySelector('.container').classList.remove('listening');
     }
@@ -770,7 +776,7 @@
    function promptRetreatConfirmation() {
         isConfirmingRetreat = true;
         stopTimer();
-        safelyStopRecognition();
+        safelyStopRecognition(true);
         
         document.getElementById('retreatModal').style.display = 'flex';
         
@@ -788,7 +794,7 @@
     function cancelRetreat() {
         isConfirmingRetreat = false;
         document.getElementById('retreatModal').style.display = 'none';
-        safelyStopRecognition();
+        safelyStopRecognition(true);
         
         if (!gameOver) {
             startTimer();
@@ -802,22 +808,22 @@
             let lastResultIndex = event.results.length - 1;
             let resultObj = event.results[lastResultIndex];
             let rawTranscript = event.results[event.results.length - 1][0].transcript.trim().toLowerCase();
-            let isFinal = resultObj.isFinal;
             
             if (isConfirmingRetreat) {
                 if (rawTranscript.includes("yes")) {
                     console.log("🗣️ Voice Command: YES (Retreat Confirmed)");
                     exitToMenu();
+                    return;
                 } else if (rawTranscript.includes("no")) {
                     console.log("🗣️ Voice Command: NO (Retreat Canceled)");
                     cancelRetreat();
+                    return;
                 }
                 return;
             }
 
             if (rawTranscript.includes("retreat")) {
                 console.log("🗣️ Voice Command Triggered: RETREAT");
-                
                 if (gameOver) {
                     exitToMenu();
                 } else {
@@ -853,8 +859,6 @@
                     } else if (wordToLetterMap[part]) {
                         liveTotalSpelling += wordToLetterMap[part];
                     } else {
-                        // STRICT LETTER VERIFICATION RULE
-                        // Discards spoken multi-character full cheat words instantly
                         if (part.length === 1 && part >= 'a' && part <= 'z') {
                             liveTotalSpelling += part;
                         }
@@ -868,11 +872,10 @@
                 document.getElementById('spellingDisplay').innerText = liveTotalSpelling.split("").join(" ");
             }
 
-            // SUCCESS STATE CHECK
             if (liveTotalSpelling === currentWord) {
                 isTransitioning = true; 
                 stopTimer();
-                safelyStopRecognition();
+                safelyStopRecognition(true);
                 setInterfaceDisabled(true);
 
                 comboCount++;
@@ -908,11 +911,10 @@
                 return; 
             }
             
-            // EXCEEDED LENGTH FAILURE GATECHECK
             if (liveTotalSpelling.length >= currentWord.length && liveTotalSpelling !== currentWord) {
                 isTransitioning = true;
                 stopTimer();
-                safelyStopRecognition();
+                safelyStopRecognition(true);
                 handleIncorrectTransition("The runes shattered!");
             }
         };
@@ -923,10 +925,7 @@
             if (gameOver) {
                 try { 
                     recognition.start(); 
-                    console.log("🎙️ Mic forced active for Game Over commands.");
-                } catch(e) {
-                    console.error("Failed to restart mic on game over:", e);
-                }
+                } catch(e) {}
                 return;
             }
             
