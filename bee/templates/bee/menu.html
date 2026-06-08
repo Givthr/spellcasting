@@ -28,7 +28,8 @@
 
     body {
         min-height: 100vh;
-        background: var(--dark-bg);
+        background: #0b0c10 url('/static/bee/images/lobby.webp') no-repeat center center fixed;
+        background-size: cover;
         font-family: 'Raleway', sans-serif;
         color: var(--text);
         display: flex;
@@ -39,8 +40,6 @@
         overflow: hidden;
         position: relative;
     }
-
-    #stars { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
 
     #introOverlay {
         position: fixed;
@@ -76,7 +75,7 @@
         position: relative;
         z-index: 10;
         text-align: center;
-        background: var(--card-bg);
+        background: rgba(34, 39, 46, 0.85);
         border: 1px solid var(--card-border);
         padding: 40px;
         border-radius: 12px;
@@ -206,8 +205,7 @@
 </style>
 </head>
 <body>
-<canvas id="stars"></canvas>
-
+    
 <div id="introOverlay">
     <video id="introVideo" autoplay muted playsinline>
         <source src="{% static 'bee/intro.mp4' %}" type="video/mp4">
@@ -284,51 +282,7 @@
     const video = document.getElementById('introVideo');
     let isGameInitiated = false; 
     let shouldMenuRun = false;
-    let isRecognitionActive = false;
-
-    (function() {
-        const canvas = document.getElementById('stars');
-        if (!canvas) return;
-        const ctx = canvas.getContext('2d');
-        let stars = [];
-
-        function resize() {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-            initStars();
-        }
-
-        function initStars() {
-            stars = [];
-            const count = Math.floor((canvas.width * canvas.height) / 3000);
-            for(let i=0; i<count; i++) {
-                stars.push({
-                    x: Math.random() * canvas.width,
-                    y: Math.random() * canvas.height,
-                    size: Math.random() * 1.5,
-                    alpha: Math.random(),
-                    speed: 0.005 + Math.random() * 0.015
-                });
-            }
-        }
-
-        function draw() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            ctx.fillStyle = '#ffffff';
-            for(let star of stars) {
-                star.alpha += star.speed;
-                if(star.alpha > 1 || star.alpha < 0) star.speed = -star.speed;
-                ctx.globalAlpha = Math.max(0, star.alpha);
-                ctx.fillRect(star.x, star.y, star.size, star.size);
-            }
-            requestAnimationFrame(draw);
-        }
-
-        window.addEventListener('resize', resize);
-        resize();
-        draw();
-    })();
-    
+    let isRecognitionActive = false;  
     let lastCommandTimestamp = performance.now();
 
     const synth = window.speechSynthesis;
