@@ -79,10 +79,10 @@
         /* Unified Header Style */
         .site-title {
             font-family: 'Cinzel Decorative', cursive;
-            font-size: clamp(1.6rem, 3.5vw, 2.2rem); /* Responsive scale down */
+            font-size: clamp(1.6rem, 3.5vw, 2.2rem);
             color: var(--gold); letter-spacing: 4px;
             text-transform: uppercase; 
-            margin-bottom: 10px; /* Reduced from 15px */
+            margin-bottom: 5px; /* Reduced from 15px to reclaim layout room */
             animation: titlePulse 3s ease-in-out infinite;
         }
         @keyframes titlePulse {
@@ -99,8 +99,8 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin: 0 0 15px 0;
-            padding-bottom: 15px;
+            margin: 0 0 10px 0; 
+            padding-bottom: 10px; 
             border-bottom: 1px solid rgba(255, 255, 255, 0.05);
         }
 
@@ -122,21 +122,24 @@
         .hearts-box { letter-spacing: 2px; }
 
         .battle-arena {
-            margin: 10px auto;
+            margin: 5px auto;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
         }
+        
         .enemy-sprite {
-            height: 250px; 
+            height: 250px; /* Maintained your large sizing preference */
             width: auto;
-            margin-bottom: 5px;
+            margin-top: -12px; /* Pulls the asset upward into dead UI space to neutralize its height impact */
+            margin-bottom: 0px;
             image-rendering: pixelated;
             image-rendering: -moz-crisp-edges;
             image-rendering: crisp-edges;
             transition: transform 0.2s ease, filter 0.5s ease, opacity 0.6s ease;
         }
+        
         .health-bar-container {
             width: 250px;
             height: 24px;
@@ -231,17 +234,17 @@
 
         .status-box {
             color: #fff;
-            margin: 15px auto;
-            min-height: 40px;
+            margin: 8px auto;
+            min-height: 36px;
             font-size: 1.1rem;
             font-weight: 500;
             letter-spacing: 1px;
             transition: color 0.2s ease;
             background: rgba(0, 0, 0, 0.4);
-            padding: 8px 20px;
+            padding: 6px 20px;
             border-radius: 8px;
             border: none;
-            box-shadow: none; 
+            box-shadow: none;
             display: inline-flex;
             align-items: center;
             justify-content: center;
@@ -253,9 +256,9 @@
             font-size: clamp(1.8rem, 4.5vw, 2.8rem);
             font-weight: bold;
             letter-spacing: 6px;
-            margin: 6px auto 12px auto;
+            margin: 8px auto 10px auto;
             color: var(--blue-glow);
-            min-height: 70px;
+            min-height: 68px;
             text-transform: uppercase;
             word-wrap: break-word;
             text-shadow: 0 0 15px rgba(79,195,247,.3);
@@ -274,15 +277,15 @@
         .action-layout {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 15px;
-            margin-top: 15px;
+            gap: 12px;
+            margin-top: 10px;
         }
 
         .btn {
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            padding: 14px 20px;
+            padding: 11px 20px;
             border: none;
             border-radius: 8px;
             font-family: 'Cinzel', serif;
@@ -295,6 +298,10 @@
             transition: transform .15s, box-shadow .15s, filter .15s;
             gap: 8px;
             width: 100%;
+        }
+
+        #exitBtn {
+            margin-top: 10px;
         }
 
         .btn:hover:not(:disabled) { transform: translateY(-2px); filter: brightness(1.1); }
