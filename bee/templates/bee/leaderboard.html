@@ -219,19 +219,28 @@
       }
 
       // 2. In-Page Tab Arena Controls
-      if (transcript.includes("novice") || transcript.includes("nobis") || transcript.includes("nov viz")) {
-        console.log("[Tab Control] Swapped to Novice's Arena via voice");
-        switchTab('easy');
-        return true;
-      }
-      if (transcript.includes("adept") || transcript.includes("adapt") || transcript.includes("a depth")) {
-        console.log("[Tab Control] Swapped to Adept's Arena via voice");
-        switchTab('medium');
-        return true;
-      }
-      if (transcript.includes("master") || transcript.includes("mass tear") || transcript.includes("mast her")) {
-        console.log("[Tab Control] Swapped to Master's Arena via voice");
-        switchTab('hard');
+      const commands = [
+        { difficulty: 'easy', keywords: ["novice", "nobis", "nov viz"] },
+        { difficulty: 'medium', keywords: ["adept", "adapt", "a depth"] },
+        { difficulty: 'hard', keywords: ["master", "mass turr", "mast her"] }
+      ];
+
+      let bestMatch = null;
+      let highestIndex = -1;
+
+      commands.forEach(cmd => {
+        cmd.keywords.forEach(keyword => {
+          let idx = transcript.lastIndexOf(keyword);
+          if (idx > highestIndex) {
+            highestIndex = idx;
+            bestMatch = cmd.difficulty;
+          }
+        });
+      });
+
+      if (bestMatch) {
+        console.log(`[Tab Control] Swapped to ${bestMatch}'s Arena via voice`);
+        switchTab(bestMatch);
         return true;
       }
       return false;
