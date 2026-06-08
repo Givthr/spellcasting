@@ -36,29 +36,6 @@
       color: var(--text);
       overflow: hidden;
     }
-    
-    .lightning-layer {
-      position: fixed; inset: 0; z-index: 1;
-      pointer-events: none;
-      overflow: hidden;
-    }
-    .bolt {
-      position: absolute;
-      width: 2px;
-      background: linear-gradient(to bottom, transparent, var(--blue-glow), transparent);
-      border-radius: 2px;
-      filter: blur(1px) drop-shadow(0 0 6px var(--blue-glow));
-      animation: bolt-flash linear infinite;
-      opacity: 0;
-    }
-    @keyframes bolt-flash {
-      0%   { opacity: 0; transform: scaleY(0) translateX(0); }
-      5%   { opacity: .9; transform: scaleY(1) translateX(-4px); }
-      10%  { opacity: .6; transform: scaleY(1) translateX(3px); }
-      15%  { opacity: .8; transform: scaleY(1) translateX(-2px); }
-      20%  { opacity: 0; }
-      100% { opacity: 0; }
-    }
 
     .page {
       position: relative; z-index: 10;
@@ -224,8 +201,6 @@
 </head>
 <body>
 
-<div class="lightning-layer" id="lightningLayer"></div>
-
 <div class="page">
   <div class="site-title">Spellcasting</div>
   <div class="site-sub">A Voice-Controlled Spelling Adventure</div>
@@ -274,28 +249,6 @@
 </div>
 
 <script>
-(function() {
-  const layer = document.getElementById('lightningLayer');
-  function spawnBolt() {
-    const el = document.createElement('div');
-    el.className = 'bolt';
-    const h = 80 + Math.random() * 200;
-    el.style.cssText = `
-      left:${Math.random()*100}%;
-      top:${Math.random()*60}%;
-      height:${h}px;
-      transform-origin: top center;
-      animation-duration:${1.5 + Math.random()*2}s;
-      animation-delay:${Math.random()*4}s;
-      opacity: 0;
-    `;
-    layer.appendChild(el);
-    setTimeout(() => el.remove(), (3.5 + Math.random()*2) * 1000);
-  }
-  setInterval(spawnBolt, 400);
-  for (let i = 0; i < 6; i++) spawnBolt();
-})();
-
 function togglePw() {
   const inp = document.getElementById('password');
   const btn = document.querySelector('.pw-toggle');
