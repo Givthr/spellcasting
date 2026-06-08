@@ -20,13 +20,13 @@
       --muted:     #7A8A9A;
     }
 
-    html, body {
-      min-height: 100vh;
-      background: linear-gradient(rgba(11, 12, 16, 0.85), rgba(11, 12, 16, 0.85)), 
-                  url('/static/bee/images/hall.png') no-repeat center center fixed;
+    html, body { 
+      min-height: 100vh; 
+      background: url("{% static 'hall.png' %}") no-repeat center center fixed;
       background-size: cover;
-      font-family: 'Raleway', sans-serif;
-      color: var(--text);
+      font-family: 'Raleway', sans-serif; 
+      color: var(--text); 
+      overflow-y: auto; 
     }
 
     .page {
