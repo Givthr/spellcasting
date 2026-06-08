@@ -1003,20 +1003,20 @@
             if (isExiting) return;
         
             if (gameOver) {
-                try { recognition.start(); } catch(e) {}
+                try { 
+                    setTimeout(() => { recognition.start(); }, 300); 
+                } catch(e) {}
                 return;
             }
             
-            // Call the wrapper function to reboot the engine AND restore the .listening class to the container
             if (!isTransitioning && !isConfirmingRetreat) {
-                startListening();
+                setTimeout(startListening, 300);
             }
         };
         
         recognition.onerror = function(e) {
             console.error("Speech error processing: ", e.error);
             
-            // Check for terminal security or hardware blocks
             if (e.error === 'not-allowed' || e.error === 'service-not-allowed') {
                 gameOver = true;
                 stopTimer();
@@ -1025,7 +1025,9 @@
                 document.getElementById('status').style.color = "var(--danger)";
             }
             
-            safelyStopRecognition();
+            if (e.error !== 'aborted') {
+                safelyStopRecognition();
+            }
         };
     }
 
