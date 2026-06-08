@@ -49,13 +49,6 @@
             z-index: 1;
         }
 
-        #stars { 
-            position: fixed; 
-            inset: 0; 
-            z-index: 0; 
-            pointer-events: none; 
-        }
-
         .container {
             position: relative;
             z-index: 10;
@@ -332,7 +325,6 @@
 
 {% csrf_token %}
 
-<canvas id="stars"></canvas>
 <div class="vignette-overlay"></div>
 
 <div class="container">
@@ -489,25 +481,25 @@
         {
         name: "INFERNAL DEVIL",
             sprites: [
-            "/static/bee//images/sprites/infernal_1.png",
-            "/static/bee//images/sprites/infernal_2.png",
-            "/static/bee//images/sprites/infernal_3.png",
+            "/static/bee//images/infernal_1.png",
+            "/static/bee//images/infernal_2.png",
+            "/static/bee//images/infernal_3.png",
             ]
         },
         {
         name: "STYGIAN DEVIL",
             sprites: [
-            "/static/bee//images/sprites/stygian_1.png",
-            "/static/bee//images/sprites/stygian_2.png",
-            "/static/bee//images/sprites/stygian_3.png",
+            "/static/bee//images/stygian_1.png",
+            "/static/bee//images/stygian_2.png",
+            "/static/bee//images/stygian_3.png",
             ]
         },
         {
         name: "ABYSSAL DEMON",
             sprites: [
-            "/static/bee//images/sprites/abyssal_1.png",
-            "/static/bee//images/sprites/abyssal_2.png",
-            "/static/bee//images/sprites/abyssal_3.png",
+            "/static/bee//images/abyssal_1.png",
+            "/static/bee//images/abyssal_2.png",
+            "/static/bee//images/abyssal_3.png",
             ]
         }
     ];
@@ -613,7 +605,7 @@
             let heartImg = document.createElement("img");
             heartImg.style.width = "20px";
             heartImg.style.margin = "0 3px";
-            heartImg.src = i < lives ? "/static/bee/ui/heart_full.png" : "/static/bee/ui/heart_empty.png";
+            heartImg.src = i < lives ? "/static/bee/images/ui/heart_full.png" : "/static/bee/images/ui/heart_empty.png";
             heartContainer.appendChild(heartImg);
         }
     }
