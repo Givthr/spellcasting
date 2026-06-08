@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -13,22 +14,15 @@
       --card-bg: #22272E; --card-border: #2E3A4A;
       --text: #D0D8E0; --muted: #7A8A9A; --error: #E57373;
     }
-    html, body { height: 100%; background: var(--dark-bg); font-family: 'Raleway', sans-serif; color: var(--text); overflow-y: auto; }
-    #stars { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
-    .lightning-layer { position: fixed; inset: 0; z-index: 1; pointer-events: none; overflow: hidden; }
-    .bolt {
-      position: absolute; width: 2px;
-      background: linear-gradient(to bottom, transparent, var(--blue-glow), transparent);
-      border-radius: 2px; filter: blur(1px) drop-shadow(0 0 6px var(--blue-glow));
-      animation: bolt-flash linear infinite; opacity: 0;
+    html, body { 
+      min-height: 100vh; 
+      background: #0b0c10 url('/static/bee/images/entrance.webp') no-repeat center center fixed;
+      background-size: cover;
+      font-family: 'Raleway', sans-serif; 
+      color: var(--text); 
+      overflow-y: auto; 
     }
-    @keyframes bolt-flash {
-      0%   { opacity: 0; transform: scaleY(0) translateX(0); }
-      5%   { opacity: .9; transform: scaleY(1) translateX(-4px); }
-      10%  { opacity: .6; transform: scaleY(1) translateX(3px); }
-      15%  { opacity: .8; transform: scaleY(1) translateX(-2px); }
-      20%  { opacity: 0; } 100% { opacity: 0; }
-    }
+    
     .page {
       position: relative; z-index: 10; min-height: 100vh;
       display: flex; flex-direction: column;
@@ -130,9 +124,7 @@
   </style>
 </head>
 <body>
-<canvas id="stars"></canvas>
-<div class="lightning-layer" id="lightningLayer"></div>
-
+  
 <div class="page">
   <div class="site-title">Spellcasting</div>
   <div class="site-sub">A Voice-Controlled Spelling Adventure</div>
@@ -192,57 +184,6 @@
 </div>
 
 <script>
-(function() {
-  const c = document.getElementById('stars');
-  const ctx = c.getContext('2d');
-  let W, H, stars = [];
-  function resize() {
-    W = c.width = window.innerWidth;
-    H = c.height = window.innerHeight;
-    stars = Array.from({length: 180}, () => ({
-      x: Math.random()*W, y: Math.random()*H,
-      r: Math.random()*1.4+.2,
-      a: Math.random(), da: (Math.random()-.5)*.008
-    }));
-  }
-  function draw() {
-    ctx.clearRect(0,0,W,H);
-    stars.forEach(s => {
-      s.a = Math.max(.05, Math.min(1, s.a + s.da));
-      if (s.a <= .05 || s.a >= 1) s.da *= -1;
-      ctx.beginPath();
-      ctx.arc(s.x, s.y, s.r, 0, Math.PI*2);
-      ctx.fillStyle = `rgba(200,220,255,${s.a})`;
-      ctx.fill();
-    });
-    requestAnimationFrame(draw);
-  }
-  window.addEventListener('resize', resize);
-  resize(); draw();
-})();
-
-(function() {
-  const layer = document.getElementById('lightningLayer');
-  function spawnBolt() {
-    const el = document.createElement('div');
-    el.className = 'bolt';
-    const h = 80 + Math.random() * 200;
-    el.style.cssText = `
-      left:${Math.random()*100}%;
-      top:${Math.random()*60}%;
-      height:${h}px;
-      transform-origin: top center;
-      animation-duration:${1.5 + Math.random()*2}s;
-      animation-delay:${Math.random()*4}s;
-      opacity: 0;
-    `;
-    layer.appendChild(el);
-    setTimeout(() => el.remove(), (3.5 + Math.random()*2) * 1000);
-  }
-  setInterval(spawnBolt, 400);
-  for (let i = 0; i < 6; i++) spawnBolt();
-})();
-
 function togglePw(id, btn) {
   const inp = document.getElementById(id);
   if (inp.type === 'password') { inp.type = 'text'; btn.textContent = '🙈'; }
