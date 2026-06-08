@@ -225,11 +225,22 @@
         
         /* --- 3. Combo Multiplier (Mana Surge Visuals) --- */
         @keyframes surgeShake {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.01); filter: brightness(1.15); }
+            0%, 100% { 
+                transform: scale(1); 
+                filter: brightness(1); 
+            }
+            50% { 
+                transform: scale(1.02);
+                filter: brightness(1.15); 
+            }
         }
+        
         .container.mana-surge {
-            animation: surgeShake 0.6s infinite ease-in-out, auraPulse 0.4s infinite ease-in-out;
+            animation: auraPulse 0.4s infinite ease-in-out;
+        }
+        
+        .container.mana-surge #gameScreen {
+            animation: surgeShake 0.4s infinite ease-in-out;
         }
 
         .status-box {
